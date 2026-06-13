@@ -1,0 +1,602 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    scroll-behavior: smooth;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+footer {
+    background-color: #212529;
+    color: white;
+    text-align: center;
+    padding: 1rem 0;
+}
+
+/* Header */
+.header-top {
+    background-color: #00b9b9;
+    color: white;
+    font-size: 16px;
+    padding: 10px 30px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+/* Navbar */
+.navbar {
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 10px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.8rem;
+}
+.nav-link {
+    position: relative;
+    display: inline-block;
+    padding: 5px 0;
+    color: #333;
+    transition: color 0.3s ease;
+    text-transform: capitalize;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    left: 50%;
+    bottom: 0;
+    background-color: #00b9b9; /* warna biru elegan */
+    transition: width 0.3s ease, left 0.3s ease;
+}
+
+.nav-link:hover {
+    color: #00b9b9; /* sedikit lebih gelap dari biru utama */
+}
+
+.nav-link:hover::after {
+    width: 100%;
+    left: 0;
+}
+
+/* Slider */
+.slider-container {
+    position: relative;
+    height: 100vh;
+    max-height: 800px;
+    background-image: url('backend/assets/img/kaiadmin/bg-puskesmas.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.slider {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.slide {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+}
+
+.slide.active {
+    opacity: 1;
+}
+
+/* Hero Section */
+.hero-section {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 150%;
+    text-align: center;
+    padding: 15px;
+}
+
+.hero-box {
+    background-color: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(10px);
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    max-width: 90%;
+    width: 600px;
+}
+
+.hero-box h1 {
+    font-size: 2rem;
+    margin-bottom: 15px;
+    color: #004d4d;
+}
+
+.hero-box p {
+    font-size: 1.1rem;
+    font-style: italic;
+    color: #444;
+}
+
+/* Card Sambutan */
+.card {
+    border: none;
+    border-left: 4px solid #00b9b9;
+    background-color: #ffffff;
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+/* Pelayanan Section Styles */
+.pelayanan-section {
+    background-color: #f8f9fa;
+    position: relative;
+    overflow: hidden;
+}
+
+.pelayanan-section::before {
+    content: '';
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background-color: rgba(0, 185, 185, 0.05);
+    top: -150px;
+    left: -150px;
+    z-index: 0;
+}
+
+.pelayanan-section::after {
+    content: '';
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background-color: rgba(0, 185, 185, 0.05);
+    bottom: -100px;
+    right: -100px;
+    z-index: 0;
+}
+
+.section-header h2 {
+    color: #004d4d;
+    position: relative;
+    display: inline-block;
+}
+
+.divider {
+    width: 60px;
+    height: 4px;
+    background-color: #00b9b9;
+    margin-top: 15px;
+}
+
+.service-card {
+    background-color: white;
+    border-radius: 12px;
+    padding: 30px 20px;
+    height: 100%;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    border-bottom: 3px solid transparent;
+}
+
+.service-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border-bottom: 3px solid #00b9b9;
+}
+
+.icon-wrapper {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    transition: all 0.3s ease;
+}
+
+.service-card:hover .icon-wrapper {
+    transform: scale(1.1);
+}
+
+.icon-wrapper i {
+    font-size: 2.5rem;
+    color: #004d4d;
+}
+
+.service-card h5 {
+    margin-bottom: 15px;
+    color: #004d4d;
+    font-weight: 600;
+}
+
+.service-card p {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.service-link {
+    color: #00b9b9;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.service-link:hover {
+    color: #004d4d;
+    transform: translateX(5px);
+}
+
+.service-link i {
+    transition: all 0.3s ease;
+}
+
+.service-link:hover i {
+    transform: translateX(3px);
+}
+
+.pelayanan-more-btn {
+    background-color: #00b9b9;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 50px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 185, 185, 0.2);
+}
+
+.pelayanan-more-btn:hover {
+    background-color: #004d4d;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 77, 77, 0.3);
+}
+
+/* Background colors for icons */
+.bg-red-soft {
+    background-color: #ffefef;
+}
+
+.bg-blue-soft {
+    background-color: #e6f7ff;
+}
+
+.bg-green-soft {
+    background-color: #e6fff0;
+}
+
+.bg-purple-soft {
+background-color: #f3e6ff;
+}
+
+/* Headings dan Divider */
+section h2, section h3 {
+    color: #004d4d;
+}
+
+.mx-auto.mb-4 {
+    border-radius: 2px;
+}
+
+/* Tombol */
+.btn {
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn:hover {
+    transform: scale(1.05);
+}
+
+/* Gallery styling */
+.gallery-item {
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.gallery-item:hover {
+    transform: translateY(-5px);
+}
+
+.gallery-item img {
+    transition: transform 0.5s ease;
+    height: 200px;
+    object-fit: cover;
+}
+
+.gallery-item:hover img {
+    transform: scale(1.05);
+}
+
+.filter-btn {
+    transition: all 0.3s ease;
+    border: 1px solid #e5e5e5;
+    margin: 0 2px;
+}
+
+.filter-btn:hover, .filter-btn.active {
+    background-color: #00b9b9 !important;
+    color: white !important;
+    border-color: #00b9b9;
+}
+
+/* Footer hover effects */
+.hover-white:hover {
+    color: white !important;
+    transition: color 0.3s ease;
+}
+
+footer a:hover i {
+    transform: scale(1.2);
+    transition: transform 0.3s ease;
+}
+
+/* Fix footer positioning */
+html, body {
+    min-height: 100vh;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+main, section {
+    flex: 0 0 auto;
+}
+
+footer {
+    margin-top: auto;
+    width: 100%;
+}
+
+/* Footer Styles */
+.footer-links a,
+.footer-info li {
+    color: #b0b0b0;
+    font-size: 14px;
+    display: block;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+}
+
+.footer-links a {
+    text-decoration: none;
+}
+
+.footer-links a:hover {
+    color: white;
+    transform: translateX(5px);
+}
+
+.hover-icon {
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.hover-icon:hover {
+    color: white !important;
+    transform: translateY(-3px);
+}
+
+.footer-bottom {
+    font-size: 14px;
+}
+
+@media (max-width: 991px) {
+footer h5 {
+    font-size: 18px;
+}
+
+footer h6 {
+    font-size: 16px;
+}
+}
+
+@media (max-width: 767px) {
+.footer-bottom .col-md-6:first-child {
+    margin-bottom: 8px;
+}
+}
+
+@media (max-width: 575px) {
+footer {
+    text-align: center;
+}
+
+footer .d-flex.align-items-center {
+    justify-content: center;
+}
+
+footer .d-flex.gap-3 {
+    justify-content: center;
+}
+
+.footer-links a:hover {
+    transform: none;
+}
+
+.footer-info li i {
+    width: 20px;
+    display: inline-block;
+    text-align: center;
+}
+
+.footer-bottom p {
+    text-align: center !important;
+}
+}
+
+/* Responsif tambahan */
+@media (max-width: 991px) {
+    .navbar-brand span {
+    font-size: 1.4rem;
+    }
+
+    .navbar-brand img {
+    height: 40px;
+    }
+
+    .navbar-nav {
+    margin-top: 15px;
+    }
+
+    .navbar-nav .nav-item {
+    margin-bottom: 8px;
+    }
+
+    .navbar-nav .nav-item .btn {
+    display: block;
+    width: 100%;
+    }
+}
+
+@media (max-width: 767px) {
+    .header-top {
+    flex-direction: column;
+    text-align: center;
+    font-size: 14px;
+    padding: 8px 10px;
+    }
+
+    .navbar-brand span {
+    font-size: 1.2rem;
+    }
+
+    .navbar-brand img {
+    height: 35px;
+    }
+
+    .hero-box h1 {
+    font-size: 1.5rem;
+    }
+
+    .hero-box p {
+    font-size: 1rem;
+    }
+
+    .slider-container {
+    height: 60vh;
+    }
+
+    section {
+    padding: 0 15px;
+    }
+}
+
+@media (max-width: 575px) {
+    .hero-box {
+    padding: 10px;
+    }
+
+    .hero-box h1 {
+    font-size: 1.3rem;
+    }
+
+    .hero-section {
+    padding: 5px;
+    }
+
+    .slider-container {
+    height: 50vh;
+    }
+
+    h2, h3 {
+    font-size: 1.5rem;
+    }
+
+    .navbar-brand img {
+    height: 30px;
+    }
+
+    .navbar-brand span {
+    font-size: 1rem;
+    }
+}
+
+@media (max-width: 991px) {
+.service-card {
+    padding: 25px 15px;
+}
+
+.icon-wrapper {
+    width: 65px;
+    height: 65px;
+}
+
+.icon-wrapper i {
+    font-size: 2rem;
+}
+}
+
+@media (max-width: 767px) {
+.service-card {
+    margin-bottom: 20px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.service-card:hover {
+    transform: translateY(-5px);
+}
+}
+
+@media (max-width: 575px) {
+.pelayanan-section {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.section-header h2 {
+    font-size: 1.8rem;
+}
+
+.icon-wrapper {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 15px;
+}
+
+.icon-wrapper i {
+    font-size: 1.8rem;
+}
+
+.service-card h5 {
+    font-size: 18px;
+}
+}
