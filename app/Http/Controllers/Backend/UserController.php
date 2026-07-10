@@ -24,7 +24,7 @@ class UserController extends Controller
 
             return DataTables::of($data)
                 ->addIndexColumn()
-                ->addColumn('action', function($row) {
+                ->addColumn('action', function ($row) {
                     $editUrl = route('user.edit', $row->id);
                     $btn = "<a href='$editUrl' class='btn btn-warning btn-sm'><i class='fa fa-edit'></i> </a> ";
                     $btn .= "<button class='btn btn-danger btn-sm btn-delete' data-id='$row->id'><i class='fa fa-trash'></i> </button>";
@@ -40,9 +40,22 @@ class UserController extends Controller
     // Menampilkan form tambah user
     public function create()
     {
-        $jenisLayanans = DB::table('m_unit_layanan')->select('id', 'unit_layanan')->get();
-        $roles = Role::pluck('name','name')->all();
-        return view('backend.user.create', compact('jenisLayanans', 'roles'));
+        $jenisLayanans = DB::table('m_unit_layanan')
+            ->select('id', 'unit_layanan')
+            ->get();
+
+        $roles = Role::pluck('name', 'name')->all();
+
+        $pesertas = DB::table('peserta')
+            ->select('id', 'no_rm', 'nama')
+            ->orderBy('nama')
+            ->get();
+
+        return view('backend.user.create', compact(
+            'jenisLayanans',
+            'roles',
+            'pesertas'
+        ));
     }
 
     // Menyimpan data user
@@ -53,14 +66,16 @@ class UserController extends Controller
             'username' => 'required|string|max:100|unique:users',
             'email' => 'required|email|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
+            'roles' => 'required|array',
             'roles.*' => 'required',
             'unit_layanan_id' => 'required|integer',
+            'peserta_id' => 'nullable|exists:peserta,id',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $fotoPath = null;
         if ($request->hasFile('foto')) {
-            $photoPath = $request->file('foto')->store('photos', 'public');
+            $fotoPath = $request->file('foto')->store('photos', 'public');
         }
 
         $user = User::create([
@@ -68,8 +83,8 @@ class UserController extends Controller
             'username' => $request->username,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role_id' => $request->role_id,
             'unit_layanan_id' => $request->unit_layanan_id,
+            'peserta_id' => $request->peserta_id,
             'foto' => $fotoPath,
             'created_at' => now(),
             'updated_at' => now(),
@@ -82,17 +97,27 @@ class UserController extends Controller
     public function edit($id)
     {
         $user = User::findOrFail($id);
-        $roles = Role::pluck('name', 'id')->mapWithKeys(function ($name, $id) {
-            return [(int) $id => $name];
-        })->all();
 
-        $userRole = $user->roles->pluck('id')->map(function ($id) {
-            return (int) $id;
-        })->toArray();
+        $roles = Role::pluck('name', 'name')->all();
 
-        $jenisLayanans = DB::table('m_unit_layanan')->select('id', 'unit_layanan')->get();
+        $userRole = $user->roles->pluck('name')->toArray();
 
-        return view('backend.user.edit', compact('user', 'jenisLayanans', 'roles', 'userRole'));
+        $jenisLayanans = DB::table('m_unit_layanan')
+            ->select('id', 'unit_layanan')
+            ->get();
+
+        $pesertas = DB::table('peserta')
+            ->select('id', 'no_rm', 'nama')
+            ->orderBy('nama')
+            ->get();
+
+        return view('backend.user.edit', compact(
+            'user',
+            'roles',
+            'userRole',
+            'jenisLayanans',
+            'pesertas'
+        ));
     }
 
     public function update(Request $request, $id)
@@ -104,8 +129,10 @@ class UserController extends Controller
             'username' => 'required|string|max:100|unique:users,username,' . $id,
             'email' => 'required|email|max:255|unique:users,email,' . $id,
             'password' => 'nullable|string|min:6|confirmed',
-            'role_id' => 'required',
+            'roles' => 'required|array',
+            'roles.*' => 'required',
             'unit_layanan_id' => 'required|integer',
+            'peserta_id' => 'nullable|exists:peserta,id',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -122,11 +149,15 @@ class UserController extends Controller
             'name' => $request->name,
             'username' => $request->username,
             'email' => $request->email,
-            'password' => $request->filled('password') ? Hash::make($request->password) : $user->password,
-            'role_id' => $request->role_id,
+            'password' => $request->filled('password')
+                ? Hash::make($request->password)
+                : $user->password,
             'unit_layanan_id' => $request->unit_layanan_id,
+            'peserta_id' => $request->peserta_id,
             'foto' => $fotoPath,
         ]);
+
+        $user->syncRoles($request->roles);
 
         return redirect()->route('user.index')->with('success', 'Data user berhasil diperbarui.');
     }

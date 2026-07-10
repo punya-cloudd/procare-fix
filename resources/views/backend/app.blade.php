@@ -39,6 +39,7 @@
 
     <link rel="stylesheet" href="{{ url('backend/assets/css/demo.css') }}">
     
+    
     @yield('styles')
 </head>
 
@@ -75,6 +76,9 @@
     
     <!-- Chart JS -->
     <script src="{{ url('backend/assets/js/plugin/chart.js/chart.min.js') }}"></script>
+
+    <!-- 🔥 TAMBAHKAN INI -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 
     <script>

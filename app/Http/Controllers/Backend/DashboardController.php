@@ -4,75 +4,168 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Obat;
-use App\Models\TrnOrder;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
-use App\Models\QrCode as QrCodeModel; // pastikan ini ada
-use Illuminate\Support\Collection;
 
+use App\Models\Peserta;
+use App\Models\Pemeriksaan;
+use App\Models\MonitoringMakanan;
+use App\Models\Bouchard;
+use App\Models\Dokter;
+use App\Models\JenisPenyakit;
+
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $jumlahObat = Obat::count();
 
-        $stokKurang = Obat::where('stok', '<', 5)
-            ->select('id', 'nama_obat', 'stok')
-            ->get();
+        /*
+        |--------------------------------------------------------------------------
+        | CARD STATISTIK
+        |--------------------------------------------------------------------------
+        */
 
-        $transaksiHariIni = TrnOrder::whereDate('created_at', Carbon::today())->count();
-        $transaksiKemarin = TrnOrder::whereDate('created_at', Carbon::yesterday())->count();
+        // Total Peserta
+        $totalPeserta = Peserta::count();
 
-        // Total obat per unit layanan, termasuk yang tidak punya order
-        $totalObatPerUnit = DB::table('m_unit_layanan as ul')
-            ->leftJoin('trn_order as o', 'ul.id', '=', 'o.unit_layanan_id')
-            ->leftJoin('order_details as od', 'o.id', '=', 'od.order_id')
-            ->select('ul.unit_layanan', DB::raw('COALESCE(SUM(od.jumlah_obat), 0) as total_obat'))
-            ->groupBy('ul.unit_layanan')
-            ->get();
+        // Total Pemeriksaan
+        $totalPemeriksaan = Pemeriksaan::count();
 
-        $unitLabels = $totalObatPerUnit->pluck('unit_layanan')->toArray();
-        // Hasil: ["UGD", "Persalinan", "Rawat Inap", "Gigi dan Mulut"]
-        
-        $unitData = $totalObatPerUnit->pluck('total_obat')->toArray();
-        // Hasil: [18, 1, 0, 1]
-        
-        // 1. Buat daftar 7 hari terakhir (dari 6 hari lalu sampai hari ini)
+        // Total Monitoring Makanan
+        $totalMonitoring = MonitoringMakanan::count();
+
+        // Total Kuisioner Bouchard
+        $totalBouchard = Bouchard::count();
+
+        // Total Dokter Aktif
+        $totalDokter = Dokter::where('status', 1)->count();
+
+        // Total Jenis Penyakit
+        $totalJenisPenyakit = JenisPenyakit::count();
+
+        // Total Risiko Tinggi
+        $risikoTinggi = Pemeriksaan::where('risk_level', 'Tinggi')->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | DISTRIBUSI RISIKO
+        |--------------------------------------------------------------------------
+        */
+
+        $risiko = Pemeriksaan::selectRaw('risk_level, COUNT(*) as total')
+            ->groupBy('risk_level')
+            ->pluck('total', 'risk_level');
+
+        $risikoLabels = [
+            'Rendah',
+            'Sedang',
+            'Tinggi'
+        ];
+
+        $risikoData = [
+            $risiko['Rendah'] ?? 0,
+            $risiko['Sedang'] ?? 0,
+            $risiko['Tinggi'] ?? 0,
+        ];
+
+        /*
+        |--------------------------------------------------------------------------
+        | TREN PEMERIKSAAN 7 HARI
+        |--------------------------------------------------------------------------
+        */
+
         $days = collect();
+
         for ($i = 6; $i >= 0; $i--) {
-            $days->push(Carbon::today()->subDays($i)->toDateString()); // format: '2025-05-01'
+
+            $days->push(
+                Carbon::today()->subDays($i)->toDateString()
+            );
         }
 
-        // 2. Ambil data transaksi per hari dari database
-        $transaksiPerHari = DB::table('trn_order')
-            ->select(DB::raw('DATE(created_at) as tanggal'), DB::raw('COUNT(*) as total'))
-            ->where('created_at', '>=', Carbon::today()->subDays(6))
-            ->groupBy(DB::raw('DATE(created_at)'))
-            ->pluck('total', 'tanggal'); // hasil: ['2025-04-30' => 2, '2025-05-01' => 5, ...]
+        $perHari = Pemeriksaan::selectRaw('DATE(tanggal) as tgl, COUNT(*) as total')
+            ->groupBy('tgl')
+            ->pluck('total', 'tgl');
 
-        // 3. Mapping tanggal lengkap + total transaksi (default 0 jika tidak ada)
-        $labelTanggal = $days->map(function ($tanggal) {
-            return Carbon::parse($tanggal)->format('d M'); // contoh: '01 Mei'
+        $labelTanggal = $days->map(function ($tgl) {
+
+            return Carbon::parse($tgl)->format('d M');
         })->toArray();
 
-        $dataJumlah = $days->map(function ($tanggal) use ($transaksiPerHari) {
-            return $transaksiPerHari->get($tanggal, 0);
-        })->toArray(); // hasil: ['2025-04-28' => 5, '2025-04-30' => 3, ...]
+        $dataJumlah = $days->map(function ($tgl) use ($perHari) {
 
+            return $perHari[$tgl] ?? 0;
+        })->toArray();
+
+        /*
+        |--------------------------------------------------------------------------
+        | MONITORING HARIAN PESERTA
+        |--------------------------------------------------------------------------
+        */
+
+        $today = Carbon::today()->toDateString();
+        $monitoringHarian = Peserta::with('jenisPenyakit')
+            ->orderBy('nama')
+            ->get()
+            ->map(function ($peserta) use ($today) {
+
+                $makanan = MonitoringMakanan::where('peserta_id', $peserta->id)
+                    ->whereDate('tanggal', $today)
+                    ->exists();
+
+                $aktivitas = Bouchard::where('peserta_id', $peserta->id)
+                    ->whereDate('tanggal', $today)
+                    ->exists();
+
+                if ($makanan && $aktivitas) {
+
+                    $status = 'Lengkap';
+                } elseif ($makanan || $aktivitas) {
+
+                    $status = 'Belum Lengkap';
+                } else {
+
+                    $status = 'Belum Dipantau';
+                }
+
+                return (object)[
+                    'id' => $peserta->id,
+                    'nama' => $peserta->nama,
+                    'jenis_penyakit' => optional($peserta->jenisPenyakit)->nama_penyakit,
+                    'makanan' => $makanan,
+                    'aktivitas' => $aktivitas,
+                    'status' => $status,
+                ];
+            });
+
+        /*
+        |--------------------------------------------------------------------------
+        | RETURN VIEW
+        |--------------------------------------------------------------------------
+        */
 
         return view('backend.dasboard.index', compact(
-            'jumlahObat',
-            'stokKurang',
-            'transaksiHariIni',
-            'transaksiKemarin',
-            'totalObatPerUnit',
-            'unitLabels',
-            'unitData',
+
+            // Card Statistik
+            'totalPeserta',
+            'totalPemeriksaan',
+            'totalMonitoring',
+            'totalBouchard',
+            'totalDokter',
+            'totalJenisPenyakit',
+            'risikoTinggi',
+
+            // Pie Chart
+            'risikoLabels',
+            'risikoData',
+
+            // Bar Chart
             'labelTanggal',
-            'dataJumlah'
+            'dataJumlah',
+
+            // Monitoring Harian
+            'monitoringHarian'
+
         ));
     }
 }

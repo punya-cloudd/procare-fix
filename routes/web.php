@@ -3,22 +3,22 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\UnitLayananController;
-use App\Http\Controllers\Backend\DataObatController;
-use App\Http\Controllers\Backend\SatuanObatController;
-use App\Http\Controllers\Backend\TransaksionalController;
-use App\Http\Controllers\Backend\HistoriTransaksionalController;
 use App\Http\Controllers\Backend\RoleController;
-use App\Http\Controllers\Backend\GudangController;
 use App\Http\Controllers\Backend\PesertaController;
+use App\Http\Controllers\Backend\PemeriksaanController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Backend\BouchardController;
+use App\Http\Controllers\Backend\DokterController;
+use App\Http\Controllers\Backend\HomeVisitController;
+use App\Http\Controllers\Backend\JenisPenyakitController;
+use App\Http\Controllers\Backend\MonitoringMakananController;
+use App\Http\Controllers\Backend\PasienController;
+use App\Http\Controllers\Backend\PetugasController;
 use App\Http\Controllers\Backend\ProfileController;
 use App\Http\Controllers\Backend\UserController;
-use App\Http\Controllers\Backend\QrCodeController;
-use App\Http\Controllers\LandingPageController;
-use App\Models\Peserta;
+// use App\Http\Controllers\LandingPageController;
 
-Route::get('/', [LandingPageController::class, 'index'])->name('welcome');
-Route::get('/download-qrcode/{id}', [LandingPageController::class, 'download'])->name('download.qrcode');
+Route::redirect('/', '/login');
 
 // Autentikasi
 Route::get('login', fn() => view('auth.login'))->name('login');
@@ -36,19 +36,6 @@ Route::prefix('backend')->middleware(['auth'])->group(function () {
 
     /** Role Permission */
     Route::resource('roles', RoleController::class);
-
-    // Gudang
-    Route::resource('gudang', GudangController::class);
-
-
-    // Satuan Obat
-    Route::get('/satuan-obat', [SatuanObatController::class, 'index'])->name('m_satuan_obat');
-    Route::get('/satuan-obat/json', [SatuanObatController::class, 'getData'])->name('obat.data');
-    Route::get('/satuan-obat/create', [SatuanObatController::class, 'create'])->name('satuan-obat.create');
-    Route::post('/satuan-obat/store', [SatuanObatController::class, 'store'])->name('satuan-obat.store');
-    Route::get('/satuan-obat/edit/{id}', [SatuanObatController::class, 'edit'])->name('satuan-obat.edit');
-    Route::put('/satuan-obat/update/{id}', [SatuanObatController::class, 'update'])->name('satuan-obat.update');
-    Route::delete('/satuan-obat/destroy/{id}', [SatuanObatController::class, 'destroy'])->name('satuan-obat.destroy');
 
     // User
     Route::get('/user', [UserController::class, 'index'])->name('user.index');
@@ -68,34 +55,37 @@ Route::prefix('backend')->middleware(['auth'])->group(function () {
         Route::delete('/{unit_layanan}', [UnitLayananController::class, 'destroy'])->name('unit_layanan.destroy');
     });
 
-    // Transaksional
-    Route::prefix('transaksional')->group(function () {
-        Route::get('/', [TransaksionalController::class, 'index'])->name('transaksional.index');
-        Route::get('/create', [TransaksionalController::class, 'create'])->name('transaksional.create');
-        Route::post('/', [TransaksionalController::class, 'store'])->name('transaksional.store');
-        Route::get('/transaksional/{id}', [TransaksionalController::class, 'show'])->name('transaksional.show');
-        Route::get('/{transaksional}/edit', [TransaksionalController::class, 'edit'])->name('transaksional.edit');
-        Route::post('/{id}', [TransaksionalController::class, 'update'])->name('transaksional.update');
-        Route::delete('/backend/transaksional/{id}', [TransaksionalController::class, 'destroy'])->name('transaksional.destroy');
-        Route::post('/update-status/{id}', [TransaksionalController::class, 'updateStatus'])->name('transaksional.update-status');
+    // Data Dokter
+    Route::prefix('dokter')->group(function () {
+        Route::get('/', [DokterController::class, 'index'])->name('dokter.index');
+        Route::get('/create', [DokterController::class, 'create'])->name('dokter.create');
+        Route::post('/', [DokterController::class, 'store'])->name('dokter.store');
+        Route::get('/{id}/edit', [DokterController::class, 'edit'])->name('dokter.edit');
+        Route::put('/{id}', [DokterController::class, 'update'])->name('dokter.update');
+        Route::get('/{id}', [DokterController::class, 'show'])->name('dokter.show');
+        Route::delete('/{id}', [DokterController::class, 'destroy'])->name('dokter.destroy');
     });
 
-    // Histori Transaksional
-    Route::prefix('histori-transaksional')->group(function () {
-        Route::get('/', [HistoriTransaksionalController::class, 'index'])->name('histori.transaksional.index');
-        Route::get('/export-pdf', [HistoriTransaksionalController::class, 'exportPdf'])->name('histori.exportPdf');
+    // Data Petugas
+    Route::prefix('petugas')->group(function () {
+        Route::get('/', [PetugasController::class, 'index'])->name('petugas.index');
+        Route::get('/create', [PetugasController::class, 'create'])->name('petugas.create');
+        Route::post('/', [PetugasController::class, 'store'])->name('petugas.store');
+        Route::get('/{id}/edit', [PetugasController::class, 'edit'])->name('petugas.edit');
+        Route::put('/{id}', [PetugasController::class, 'update'])->name('petugas.update');
+        Route::get('/{id}', [PetugasController::class, 'show'])->name('petugas.show');
+        Route::delete('/{id}', [PetugasController::class, 'destroy'])->name('petugas.destroy');
     });
 
-    // Data Obat
-    Route::prefix('data-obat')->group(function () {
-        Route::get('/', [DataObatController::class, 'index'])->name('data_obat.index');
-        Route::get('/create', [DataObatController::class, 'create'])->name('data_obat.create');
-        Route::post('/', [DataObatController::class, 'store'])->name('data_obat.store');
-        Route::get('/{id}/edit', [DataObatController::class, 'edit'])->name('data_obat.edit');
-        Route::put('/{id}', [DataObatController::class, 'update'])->name('data_obat.update');
-        Route::put('/update-stok/{id}', [DataObatController::class, 'updateStok'])->name('update.stok.obat');
-        Route::get('/{id}', [DataObatController::class, 'show'])->name('data_obat.show');
-        Route::delete('/{id}', [DataObatController::class, 'destroy'])->name('data_obat.destroy');
+    // Data Jenis Penyakit
+    Route::prefix('jenis_penyakit')->group(function () {
+        Route::get('/', [JenisPenyakitController::class, 'index'])->name('jenis_penyakit.index');
+        Route::get('/create', [JenisPenyakitController::class, 'create'])->name('jenis_penyakit.create');
+        Route::post('/', [JenisPenyakitController::class, 'store'])->name('jenis_penyakit.store');
+        Route::get('/{id}/edit', [JenisPenyakitController::class, 'edit'])->name('jenis_penyakit.edit');
+        Route::put('/{id}', [JenisPenyakitController::class, 'update'])->name('jenis_penyakit.update');
+        Route::get('/{id}', [JenisPenyakitController::class, 'show'])->name('jenis_penyakit.show');
+        Route::delete('/{id}', [JenisPenyakitController::class, 'destroy'])->name('jenis_penyakit.destroy');
     });
 
     // Data Peserta
@@ -109,20 +99,74 @@ Route::prefix('backend')->middleware(['auth'])->group(function () {
         Route::delete('/{id}', [PesertaController::class, 'destroy'])->name('peserta.destroy');
     });
 
-    // QR Code
-    Route::prefix('qrCode')->group(function () {
-        Route::get('/', [QrCodeController::class, 'index'])->name('qrCode.index');
-        Route::get('/create', [QrCodeController::class, 'create'])->name('qrCode.create');
-        Route::post('/', [QrCodeController::class, 'store'])->name('qrCode.store');
-        Route::get('/verify/{id}', [QrCodeController::class, 'verify'])->name('qrCode.verify');
-        Route::get('/show/{id}', [QrCodeController::class, 'show'])->name('qrCode.show');
-        Route::get('/share/{id}', [QrCodeController::class, 'shareQrCode'])->name('qrCode.shareQrCode');
-        Route::delete('/{id}', [QrCodeController::class, 'destroy'])->name('qrCode.destroy');
-        Route::post('/generate', [QrCodeController::class, 'generateQrCode'])->name('qrcode.generate');
-        Route::get('/data', [QrCodeController::class, 'data']);
-        Route::get('/{id}/edit', [QrCodeController::class, 'edit'])->name('qrCode.edit');
-        Route::put('/{id}', [QrCodeController::class, 'update'])->name('qrCode.update');
+    // Data Pemeriksaan
+    Route::prefix('pemeriksaan')->group(function () {
+        Route::get('/', [PemeriksaanController::class, 'index'])->name('pemeriksaan.index');
+        Route::get('/create', [PemeriksaanController::class, 'create'])->name('pemeriksaan.create');
+        Route::post('/', [PemeriksaanController::class, 'store'])->name('pemeriksaan.store');
+        Route::get('/{id}/edit', [PemeriksaanController::class, 'edit'])->name('pemeriksaan.edit');
+        Route::put('/{id}', [PemeriksaanController::class, 'update'])->name('pemeriksaan.update');
+        Route::get('/history/{peserta}', [PemeriksaanController::class, 'history'])->name('pemeriksaan.history');
+        Route::get('/{id}', [PemeriksaanController::class, 'show'])->name('pemeriksaan.show');
+        Route::delete('/{id}', [PemeriksaanController::class, 'destroy'])->name('pemeriksaan.destroy');
+        Route::get('/pemeriksaan/{id}/pdf', [PemeriksaanController::class, 'exportPdf'])->name('pemeriksaan.pdf');
+        Route::get('/pemeriksaan/{id}/excel', [PemeriksaanController::class, 'exportExcel'])->name('pemeriksaan.excel');
     });
+
+    // Data Home Visit
+    Route::prefix('homevisit')->group(function () {
+        Route::get('/', [HomeVisitController::class, 'index'])->name('home_visit.index');
+        Route::get('/create', [HomeVisitController::class, 'create'])->name('home_visit.create');
+        Route::post('/', [HomeVisitController::class, 'store'])->name('home_visit.store');
+        Route::get('/{id}/edit', [HomeVisitController::class, 'edit'])->name('home_visit.edit');
+        Route::put('/{id}', [HomeVisitController::class, 'update'])->name('home_visit.update');
+        Route::get('/{id}', [HomeVisitController::class, 'show'])->name('home_visit.show');
+        Route::delete('/{id}', [HomeVisitController::class, 'destroy'])->name('home_visit.destroy');
+    });
+
+
+
+    // Data Monitoring Makanan
+    Route::prefix('monitoring_makanan')->group(function () {
+        Route::get('/', [MonitoringMakananController::class, 'index'])->name('monitoring_makanan.index');
+        Route::get('/create', [MonitoringMakananController::class, 'create'])->name('monitoring_makanan.create');
+        Route::post('/', [MonitoringMakananController::class, 'store'])->name('monitoring_makanan.store');
+        Route::get('/{id}/edit', [MonitoringMakananController::class, 'edit'])->name('monitoring_makanan.edit');
+        Route::put('/{id}', [MonitoringMakananController::class, 'update'])->name('monitoring_makanan.update');
+        Route::get('/history/{peserta}', [MonitoringMakananController::class, 'history'])->name('monitoring_makanan.history');
+        Route::get('/{id}', [MonitoringMakananController::class, 'show'])->name('monitoring_makanan.show');
+        Route::delete('/{id}', [MonitoringMakananController::class, 'destroy'])->name('monitoring_makanan.destroy');
+        Route::get('monitoring-makanan/{id}/export-pdf', [MonitoringMakananController::class, 'exportPdf'])->name('monitoring_makanan.export.pdf');
+
+        Route::get('monitoring-makanan/{id}/export-excel', [MonitoringMakananController::class, 'exportExcel'])->name('monitoring_makanan.export.excel');
+    });
+
+    // Data Monitoring AKtivitas
+    Route::prefix('bouchard')->group(function () {
+        Route::get('/', [BouchardController::class, 'index'])->name('bouchard.index');
+        Route::get('/create', [BouchardController::class, 'create'])->name('bouchard.create');
+        Route::post('/', [BouchardController::class, 'store'])->name('bouchard.store');
+        Route::get('/{id}/edit', [BouchardController::class, 'edit'])->name('bouchard.edit');
+        Route::put('/{id}', [BouchardController::class, 'update'])->name('bouchard.update');
+        Route::get('/history/{peserta}', [BouchardController::class, 'history'])->name('bouchard.history');
+        Route::get('/{id}', [BouchardController::class, 'show'])->name('bouchard.show');
+        Route::delete('/{id}', [BouchardController::class, 'destroy'])->name('bouchard.destroy');
+        Route::get('/bouchard/{id}/export-pdf', [BouchardController::class, 'exportPdf'])->name('bouchard.export.pdf');
+        Route::get('/bouchard/{id}/export-excel', [BouchardController::class, 'exportExcel'])->name('bouchard.export.excel');
+    });
+
+    // Data Pasien
+    Route::prefix('pasien')->group(function () {
+        Route::get('/', [PasienController::class, 'index'])->name('pasien.index');
+        Route::get('/create', [PasienController::class, 'create'])->name('pasien.create');
+        Route::post('/', [PasienController::class, 'store'])->name('pasien.store');
+        Route::get('/{id}/edit', [PasienController::class, 'edit'])->name('pasien.edit');
+        Route::put('/{id}', [PasienController::class, 'update'])->name('pasien.update');
+        Route::get('/{id}', [PasienController::class, 'show'])->name('pasien.show');
+        Route::delete('/{id}', [PasienController::class, 'destroy'])->name('pasien.destroy');
+    });
+
+
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.index');
@@ -130,10 +174,4 @@ Route::prefix('backend')->middleware(['auth'])->group(function () {
     Route::get('/show', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/settings', [ProfileController::class, 'settings'])->name('profile.settings');
     Route::post('/change-password', [ProfileController::class, 'changePassword'])->name('profile.changePassword');
-
-    // Others
-    Route::get('/get-users-by-unit/{unitId}', [TransaksionalController::class, 'getUsersByUnit'])->name('get.users.by.unit');
-    Route::get('/stok-obat/{obatId}/stok', [TransaksionalController::class, 'getStokById']);
 });
-
-

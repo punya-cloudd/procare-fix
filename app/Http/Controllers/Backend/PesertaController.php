@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Peserta;
+use App\Models\Dokter;
+use App\Models\JenisPenyakit;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +18,15 @@ class PesertaController extends Controller
 
         if ($request->ajax()) {
 
-            $peserta = DB::table('peserta')->get();
+            $peserta = DB::table('peserta')
+                ->leftJoin('dokter', 'peserta.dokter_id', '=', 'dokter.id')
+                ->leftJoin('jenis_penyakit', 'peserta.jenis_penyakit_id', '=', 'jenis_penyakit.id')
+                ->select(
+                    'peserta.*',
+                    'dokter.nama as dokter',
+                    'jenis_penyakit.nama_penyakit as jenis_penyakit'
+                )
+                ->get();
 
             return DataTables::of($peserta)
 
@@ -39,7 +49,7 @@ class PesertaController extends Controller
 
                             <li>
                                 <a class="dropdown-item"
-                                href="'.route('peserta.show',$row->id).'">
+                                href="' . route('peserta.show', $row->id) . '">
 
                                     <i class="fa fa-search me-2 text-primary"></i>
                                     Lihat Detail Peserta
@@ -49,7 +59,7 @@ class PesertaController extends Controller
 
                             <li>
                                 <a class="dropdown-item"
-                                href="'.route('peserta.edit',$row->id).'">
+                                href="' . route('peserta.edit', $row->id) . '">
 
                                     <i class="fa fa-pencil-alt me-2 text-info"></i>
                                     Edit Peserta
@@ -60,7 +70,7 @@ class PesertaController extends Controller
                             <li>
                                 <button type="button"
                                         class="dropdown-item btn-delete"
-                                        data-id="'.$row->id.'">
+                                        data-id="' . $row->id . '">
 
                                     <i class="fa fa-trash me-2 text-danger"></i>
                                     Hapus Peserta
@@ -84,9 +94,10 @@ class PesertaController extends Controller
 
     public function create()
     {
+        $dokter = Dokter::where('status', 1)->get();
+        $jenisPenyakit = JenisPenyakit::all();
 
-        return view('backend.peserta.create');
-
+        return view('backend.peserta.create', compact('dokter', 'jenisPenyakit'));
     }
 
 
@@ -95,23 +106,16 @@ class PesertaController extends Controller
 
         $request->validate([
 
-            'nik'=>'required',
-
-            'nama'=>'required',
-
-            'jk'=>'required',
-
-            'tgl_lahir'=>'nullable',
-
-            'alamat'=>'nullable',
-
-            'no_hp'=>'nullable',
-
-            'diagnosa'=>'required',
-
-            'no_bpjs'=>'nullable',
-
-            'status'=>'required',
+            'nik' => 'required',
+            'nama' => 'required',
+            'jk' => 'required',
+            'tgl_lahir' => 'nullable',
+            'alamat' => 'nullable',
+            'no_hp' => 'nullable',
+            'dokter_id' => 'required',
+            'jenis_penyakit_id' => 'required',
+            'no_bpjs' => 'nullable',
+            'status' => 'required',
 
         ]);
 
@@ -123,42 +127,44 @@ class PesertaController extends Controller
 
         Peserta::create([
 
-            'no_rm'=>$no_rm,
-
-            'nik'=>$request->nik,
-
-            'nama'=>$request->nama,
-
-            'jk'=>$request->jk,
-
-            'tgl_lahir'=>$request->tgl_lahir,
-
-            'alamat'=>$request->alamat,
-
-            'no_hp'=>$request->no_hp,
-
-            'diagnosa'=>$request->diagnosa,
-
-            'no_bpjs'=>$request->no_bpjs,
-
-            'status'=>$request->status,
+            'no_rm' => $no_rm,
+            'nik' => $request->nik,
+            'nama' => $request->nama,
+            'jk' => $request->jk,
+            'tgl_lahir' => $request->tgl_lahir,
+            'alamat' => $request->alamat,
+            'no_hp' => $request->no_hp,
+            'dokter_id' => $request->dokter_id,
+            'jenis_penyakit_id' => $request->jenis_penyakit_id,
+            'no_bpjs' => $request->no_bpjs,
+            'status' => $request->status,
 
         ]);
 
         return redirect()
             ->route('peserta.index')
-            ->with('success','Data peserta berhasil ditambahkan.');
-
+            ->with('success', 'Data peserta berhasil ditambahkan.');
     }
 
 
     public function show($id)
     {
+        $peserta = DB::table('peserta')
+            ->leftJoin('dokter', 'peserta.dokter_id', '=', 'dokter.id')
+            ->leftJoin('jenis_penyakit', 'peserta.jenis_penyakit_id', '=', 'jenis_penyakit.id')
+            ->select(
+                'peserta.*',
+                'dokter.nama as dokter',
+                'jenis_penyakit.nama_penyakit as jenis_penyakit'
+            )
+            ->where('peserta.id', $id)
+            ->first();
 
-        $peserta = Peserta::findOrFail($id);
+        if (!$peserta) {
+            abort(404);
+        }
 
-        return view('backend.peserta.show',compact('peserta'));
-
+        return view('backend.peserta.show', compact('peserta'));
     }
 
 
@@ -166,63 +172,49 @@ class PesertaController extends Controller
     {
 
         $peserta = Peserta::findOrFail($id);
+        $dokter = Dokter::where('status', 1)->get();
+        $jenisPenyakit = JenisPenyakit::all();
 
-        return view('backend.peserta.edit',compact('peserta'));
-
+        return view('backend.peserta.edit', compact('peserta', 'dokter', 'jenisPenyakit'));
     }
 
 
-    public function update(Request $request,$id)
+    public function update(Request $request, $id)
     {
 
         $request->validate([
 
-            'nik'=>'required',
-
-            'nama'=>'required',
-
-            'jk'=>'required',
-
-            'tgl_lahir'=>'nullable',
-
-            'alamat'=>'nullable',
-
-            'no_hp'=>'nullable',
-
-            'diagnosa'=>'required',
-
-            'no_bpjs'=>'nullable',
-
-            'status'=>'required',
+            'nik' => 'required',
+            'nama' => 'required',
+            'jk' => 'required',
+            'tgl_lahir' => 'nullable',
+            'alamat' => 'nullable',
+            'no_hp' => 'nullable',
+            'dokter_id' => 'required',
+            'jenis_penyakit_id' => 'required',
+            'no_bpjs' => 'nullable',
+            'status' => 'required',
 
         ]);
 
         Peserta::findOrFail($id)->update([
 
-            'nik'=>$request->nik,
-
-            'nama'=>$request->nama,
-
-            'jk'=>$request->jk,
-
-            'tgl_lahir'=>$request->tgl_lahir,
-
-            'alamat'=>$request->alamat,
-
-            'no_hp'=>$request->no_hp,
-
-            'diagnosa'=>$request->diagnosa,
-
-            'no_bpjs'=>$request->no_bpjs,
-
-            'status'=>$request->status,
+            'nik' => $request->nik,
+            'nama' => $request->nama,
+            'jk' => $request->jk,
+            'tgl_lahir' => $request->tgl_lahir,
+            'alamat' => $request->alamat,
+            'no_hp' => $request->no_hp,
+            'dokter_id' => $request->dokter_id,
+            'jenis_penyakit_id' => $request->jenis_penyakit_id,
+            'no_bpjs' => $request->no_bpjs,
+            'status' => $request->status,
 
         ]);
 
         return redirect()
             ->route('peserta.index')
-            ->with('success','Data peserta berhasil diupdate.');
-
+            ->with('success', 'Data peserta berhasil diupdate.');
     }
 
 
@@ -233,10 +225,8 @@ class PesertaController extends Controller
 
         return response()->json([
 
-            'success'=>true
+            'success' => true
 
         ]);
-
     }
-
 }

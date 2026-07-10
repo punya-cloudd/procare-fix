@@ -4,7 +4,7 @@
             <ul class="nav">
                 <li class="nav-item">
                     <a class="nav-link" href="http://www.themekita.com">
-                        Puskesmas
+                        Klinik
                     </a>
                 </li>
                 <li class="nav-item">
@@ -18,7 +18,7 @@
     
         <div>
             Distributed by
-            <a target="_blank" href="/">Microdata Indonesia</a>.
+            <a target="_blank" href="/">IT KMC</a>.
         </div>
     </div>
 </footer>

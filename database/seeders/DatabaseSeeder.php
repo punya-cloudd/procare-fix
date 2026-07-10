@@ -17,8 +17,6 @@ class DatabaseSeeder extends Seeder
             PermissionsSeeder::class,
             UnitLayananSeeder::class,
             SuperAdminSeeder::class,
-            GudangSeeder::class,
-            SatuanObatSeeder::class,
         ]);
     }
 }

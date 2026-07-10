@@ -31,7 +31,7 @@
                         </div>
 
                         <h3 class="font-md">
-                            <strong>KEDATON MEDICAL CENTER</strong>
+                            <strong>PROLANIS CARE</strong>
                         </h3>
                         <p>Sign Into Your Account.</p>
 

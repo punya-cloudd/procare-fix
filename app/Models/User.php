@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
+use App\Models\Peserta;
 
 class User extends Authenticatable
 {
@@ -24,6 +25,7 @@ class User extends Authenticatable
         'username',
         'password',
         'unit_layanan_id',
+        'peserta_id',
         'foto',
     ];
 
@@ -57,5 +59,10 @@ class User extends Authenticatable
         } else {
             $this->attributes['foto'] = $value;
         }
+    }
+
+    public function peserta()
+    {
+        return $this->belongsTo(Peserta::class, 'peserta_id');
     }
 }

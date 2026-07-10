@@ -12,7 +12,7 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="d-flex align-items-center">
-                            <h4 class="card-title">Data Unit Layanan</h4>
+                            <h4 class="card-title">Data Peran</h4>
                             <a href="{{ route('unit_layanan.create') }}" class="btn btn-success ms-auto btn-sm">
                                 <i class="fa fa-plus"></i> Tambah Data
                             </a>
@@ -25,7 +25,7 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th style="font-weight: bold">No</th>
-                                        <th style="font-weight: bold">Unit Layanan</th>
+                                        <th style="font-weight: bold">Peran</th>
                                         <th style="font-weight: bold">Keterangan</th>
                                         <th style="font-weight: bold" class="text-center" width="22%">Aksi</th>
                                     </tr>

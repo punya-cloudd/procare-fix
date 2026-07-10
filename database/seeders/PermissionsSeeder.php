@@ -30,46 +30,50 @@ class PermissionsSeeder extends Seeder
             'dashboard-view',
 
             // Data Master
-            'satuan-obat-list',
-            'satuan-obat-create',
-            'satuan-obat-edit',
-            'satuan-obat-delete',
-
             'unit-layanan-list',
             'unit-layanan-create',
             'unit-layanan-edit',
             'unit-layanan-delete',
 
-            'gudang-list',
-            'gudang-create',
-            'gudang-edit',
-            'gudang-delete',
+            'dokter-list',
+            'dokter-create',
+            'dokter-edit',
+            'dokter-delete',
+
+            'petugas-list',
+            'petugas-create',
+            'petugas-edit',
+            'petugas-delete',
+
+            'jenis-penyakit-list',
+            'jenis-penyakit-create',
+            'jenis-penyakit-edit',
+            'jenis-penyakit-delete',
 
             'peserta-list',
             'peserta-create',
             'peserta-edit',
             'peserta-delete',
 
-            'obat-list',
-            'obat-create',
-            'obat-edit',
-            'obat-delete',
+            'pemeriksaan-list',
+            'pemeriksaan-create',
+            'pemeriksaan-edit',
+            'pemeriksaan-delete',
 
-            // Transaksional
-            'transaksi-list',
-            'transaksi-create',
-            'transaksi-edit',
-            'transaksi-delete',
-            'transaksi-update-status',
+            'homevisit-list',
+            'homevisit-create',
+            'homevisit-edit',
+            'homevisit-delete',
 
-            'history-transaksi-view',
-            'export-pdf',
-            'export-excel',
+            'monitoring-makanan-list',
+            'monitoring-makanan-create',
+            'monitoring-makanan-edit',
+            'monitoring-makanan-delete',
 
-            'qrcode-list',
-            'qrcode-create',
-            'qrcode-edit',
-            'qrcode-delete',
+            'bouchard-list',
+            'bouchard-create',
+            'bouchard-edit',
+            'bouchard-delete',
 
             'menu-data-master',
             'menu-transaksional'
