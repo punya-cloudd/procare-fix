@@ -68,73 +68,22 @@
                         orderable: false,
                         searchable: false
                     },
-
-                    // {
-                    //     data: 'no_rm',
-                    //     name: 'no_rm'
-                    // },
-
-                    {
-                        data: 'nama',
-                        name: 'nama'
-                    },
-
-                    // {
-                    //     data: 'nik',
-                    //     name: 'nik'
-                    // },
-
-                    // {
-                    //     data: 'jk',
-                    //     name: 'jk',
-                    //     render:function(data){
-
-                    //         if(data=="L"){
-                    //             return '<span class="badge bg-primary">Laki-laki</span>';
-                    //         }
-
-                    //         return '<span class="badge bg-info">Perempuan</span>';
-
-                    //     }
-                    // },
-
-                    {
-                        data: 'jenis_penyakit',
-                        name: 'jenis_penyakit'
-                    },
-
-                    {
-                        data: 'dokter',
-                        name: 'dokter'
-                    },
-
-                    // {
-                    //     data:'no_bpjs',
-                    //     name:'no_bpjs'
-                    // },
-
-                    {
-                        data: 'status',
-                        name: 'status',
+                    // { data: 'no_rm', name: 'no_rm'},
+                    { data: 'nama',name: 'nama'},
+                    // { data: 'nik',name: 'nik'},
+                    // { data: 'jk', name: 'jk', render:function(data){ if(data=="L"){  return '<span class="badge bg-primary">Laki-laki</span>';}  return '<span class="badge bg-info">Perempuan</span>';}},
+                    { data: 'jenis_penyakit', name: 'jenis_penyakit'},
+                    { data: 'dokter', name: 'dokter'},
+                    // { data:'no_bpjs', name:'no_bpjs'},
+                    { data: 'status', name: 'status',
                         render: function(data) {
-
                             if (data == "AKTIF") {
                                 return '<span class="badge bg-success">Aktif</span>';
                             }
-
                             return '<span class="badge bg-danger">Tidak Aktif</span>';
-
                         }
                     },
-
-                    {
-                        data: 'action',
-                        name: 'action',
-                        orderable: false,
-                        searchable: false,
-                        className: 'text-center align-middle'
-                    },
-
+                    { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center align-middle'},
                 ],
                 pageLength: 5,
                 lengthMenu: [

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Pemeriksaan;
 use App\Models\Peserta;
 use App\Models\Petugas;
+use App\Models\JenisPenyakit;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -22,112 +23,76 @@ class PemeriksaanController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
             $data = Peserta::with(['jenisPenyakit'])
                 ->whereHas('pemeriksaan')
                 ->withCount('pemeriksaan')
                 ->get();
-
             return DataTables::of($data)
-
                 ->addIndexColumn()
-
                 ->addColumn('nama', function ($row) {
-
                     return '
                         <a href="' . route('pemeriksaan.history', $row->id) . '"
                         class="fw-bold text-primary text-decoration-none">
-
                             <i class="fa fa-user-circle me-1"></i>
-
                             ' . $row->nama . '
-
                         </a>
                     ';
                 })
-
                 ->addColumn('penyakit', function ($row) {
                     return $row->jenisPenyakit->nama_penyakit ?? '-';
                 })
-
                 ->addColumn('jumlah', function ($row) {
                     return $row->pemeriksaan_count . ' Kali';
                 })
-
                 ->addColumn('terakhir', function ($row) {
-
                     $last = Pemeriksaan::where('peserta_id', $row->id)
                         ->latest('tanggal')
                         ->first();
-
                     return $last
                         ? \Carbon\Carbon::parse($last->tanggal)->format('d-m-Y')
                         : '-';
                 })
-
                 ->addColumn('risk', function ($row) {
-
                     $last = Pemeriksaan::where('peserta_id', $row->id)
                         ->latest('tanggal')
                         ->first();
-
                     if (!$last) {
                         return '-';
                     }
-
                     $color = 'success';
-
                     if ($last->risk_score >= 70) {
                         $color = 'danger';
                     } elseif ($last->risk_score >= 40) {
                         $color = 'warning text-dark';
                     }
-
                     return '
                         <span class="badge bg-' . $color . '">
                             ' . $last->risk_score . ' (' . $last->risk_level . ')
                         </span>
                     ';
                 })
-
                 ->addColumn('action', function ($row) {
-
                     return '
                     <div class="dropdown">
-
                         <button class="btn btn-link p-0 text-primary"
                                 type="button"
                                 data-bs-toggle="dropdown">
-
                             <i class="fa fa-eye" style="font-size:18px;"></i>
-
                         </button>
-
                         <ul class="dropdown-menu dropdown-menu-end">
-
                             <li>
-
                                 <a class="dropdown-item"
                                 href="' . route('pemeriksaan.history', $row->id) . '">
-
                                     <i class="fa fa-history me-2 text-primary"></i>
-
                                     Riwayat Pemeriksaan
-
                                 </a>
-
                             </li>
-
                         </ul>
-
                     </div>';
                 })
-
                 ->rawColumns(['nama', 'risk', 'action'])
-
                 ->make(true);
         }
-
         return view('backend.pemeriksaan.index');
     }
 
@@ -136,10 +101,13 @@ class PemeriksaanController extends Controller
     {
         $peserta = Peserta::orderBy('nama')->get();
         $petugas = Petugas::orderBy('nama')->get();
+        $jenisPenyakit = JenisPenyakit::where('status', 1)
+            ->orderBy('nama_penyakit')
+            ->get();
 
         $selectedPeserta = $request->peserta_id;
 
-        return view('backend.pemeriksaan.create', compact('peserta', 'petugas', 'selectedPeserta'));
+        return view('backend.pemeriksaan.create', compact('peserta', 'petugas', 'jenisPenyakit', 'selectedPeserta'));
     }
 
 
@@ -149,71 +117,157 @@ class PemeriksaanController extends Controller
             'peserta_id' => 'required',
             'petugas_id' => 'required',
             'tanggal' => 'required',
+
+            'petugas_tambahan' => 'nullable|array',
+            'petugas_tambahan.*' => 'nullable|exists:petugas,id',
+
+            'riwayat_penyakit' => 'nullable|string',
             'dokumen' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
-
         // 🔥 HITUNG SCORE
         $score = $this->calculateRisk($request);
         $level = $this->getRiskLevel($score);
         $breakdown = $this->getRiskBreakdown($request);
+
+        $petugasTambahan = collect($request->petugas_tambahan ?? [])
+            ->filter(function ($value) {
+                return !is_null($value) && $value !== '';
+            })
+            ->toArray();
         $dokumen = null;
+
         if ($request->hasFile('dokumen')) {
             $dokumen = $request
                 ->file('dokumen')
                 ->store('pemeriksaan', 'public');
         }
+        // SIMPAN PENYAKIT BARU KE MASTER JENIS PENYAKIT
+        if ($request->filled('riwayat_penyakit')) {
+
+            $riwayat = json_decode($request->riwayat_penyakit, true);
+
+            if (is_array($riwayat)) {
+
+                foreach ($riwayat as &$item) {
+
+                    // Ambil nama penyakit
+                    $namaPenyakit = is_array($item)
+                        ? ($item['value'] ?? null)
+                        : $item;
+
+
+                    if (!$namaPenyakit) {
+                        continue;
+                    }
+
+
+                    // Cek apakah sudah ada di master
+                    $penyakit = JenisPenyakit::where(
+                        'nama_penyakit',
+                        $namaPenyakit
+                    )->first();
+
+
+                    // Kalau belum ada, buat baru
+                    if (!$penyakit) {
+
+                        $penyakit = JenisPenyakit::create([
+                            'kode' => 'P' . str_pad(
+                                JenisPenyakit::count() + 1,
+                                4,
+                                '0',
+                                STR_PAD_LEFT
+                            ),
+
+                            'nama_penyakit' => $namaPenyakit,
+
+                            'keterangan' => null,
+
+                            'status' => 1,
+                        ]);
+                    }
+
+
+                    // Simpan ID master juga
+                    if (is_array($item)) {
+                        $item['id'] = $penyakit->id;
+                    }
+                }
+
+
+                // Update kembali JSON riwayat penyakit
+                $request->merge([
+                    'riwayat_penyakit' => json_encode($riwayat)
+                ]);
+            }
+        }
 
         Pemeriksaan::create([
 
+            // IDENTITAS
             'peserta_id' => $request->peserta_id,
             'petugas_id' => $request->petugas_id,
-            'tanggal' => $request->tanggal,
+            'petugas_tambahan' => !empty($petugasTambahan)
+                ? $petugasTambahan
+                : null,
+            'tanggal'    => $request->tanggal,
 
-            // VITAL
-            'sistol' => $request->sistol,
-            'diastol' => $request->diastol,
-            'nadi' => $request->nadi,
-            'spo2' => $request->spo2,
+            // TANDA VITAL
+            'suhu'        => $request->suhu,
+            'sistol'      => $request->sistol,
+            'diastol'     => $request->diastol,
+            'nadi'        => $request->nadi,
+            'respirasi'   => $request->respirasi,
+            'spo2'        => $request->spo2,
 
             // ANTROPOMETRI
-            'berat_badan' => $request->berat_badan,
-            'tinggi_badan' => $request->tinggi_badan,
-            'bmi' => $request->bmi,
+            'berat_badan'   => $request->berat_badan,
+            'tinggi_badan'  => $request->tinggi_badan,
+            'bmi'           => $request->bmi,
             'lingkar_perut' => $request->lingkar_perut,
 
-            // KELUHAN
-            'keluhan' => $request->keluhan,
-            'kepatuhan' => $request->kepatuhan,
+            // LABORATORIUM
+            'gds'               => $request->gds,
+            'gdp'               => $request->gdp,
+            'g2jpp'             => $request->g2jpp,
+            'hba1c'             => $request->hba1c,
 
-            // GLIKEMIK
-            'gds' => $request->gds,
-            'gdp' => $request->gdp,
-            'g2jpp' => $request->g2jpp,
-            'hba1c' => $request->hba1c,
+            'kolesterol_total'  => $request->kolesterol_total,
+            'ldl'               => $request->ldl,
+            'hdl'               => $request->hdl,
+            'trigliserida'      => $request->trigliserida,
 
-            // LIPID
-            'kolesterol_total' => $request->kolesterol_total,
-            'ldl' => $request->ldl,
-            'hdl' => $request->hdl,
-            'trigliserida' => $request->trigliserida,
+            'ureum'             => $request->ureum,
+            'kreatinin'         => $request->kreatinin,
+            'egfr'              => $request->egfr,
+            'asam_urat'         => $request->asam_urat,
 
-            // GINJAL
-            'ureum' => $request->ureum,
-            'kreatinin' => $request->kreatinin,
-            'egfr' => $request->egfr,
-            'asam_urat' => $request->asam_urat,
+            // ANAMNESIS
+            'keluhan_utama'          => $request->keluhan_utama,
+            'hamil'                  => $request->has('hamil'),
+            'menyusui'               => $request->has('menyusui'),
+            'status_perokok'         => $request->status_perokok,
 
-            // HASIL
-            'hasil_lab' => $request->hasil_lab,
+            // sementara disimpan JSON
+            'riwayat_penyakit' => $request->riwayat_penyakit,
+
+            'riwayat_alergi_obat'    => $request->riwayat_alergi_obat,
+            'riwayat_alergi_lainnya' => $request->riwayat_alergi_lainnya,
+            'obat_dikonsumsi'        => $request->obat_dikonsumsi,
+
+            // CATATAN PROFESIONAL
+            'catatan_dokter' => $request->catatan_dokter,
+            'catatan_gizi' => $request->catatan_gizi,
+            'aktivitas_fisik' => $request->aktivitas_fisik,
             'catatan' => $request->catatan,
 
             // DOKUMEN
             'dokumen' => $dokumen,
 
-            // 🔥 RISK SYSTEM
-            'risk_score' => $score,
-            'risk_level' => $level,
-            'risk_breakdown' => json_encode($breakdown),
+            // RISK
+            'risk_score'      => $score,
+            'risk_level'      => $level,
+            'risk_breakdown'  => json_encode($breakdown),
 
         ]);
 
@@ -228,8 +282,12 @@ class PemeriksaanController extends Controller
         $pemeriksaan = Pemeriksaan::findOrFail($id);
         $peserta = Peserta::orderBy('nama')->get();
         $petugas = Petugas::orderBy('nama')->get();
+        $petugasTambahan = $pemeriksaan->petugas_tambahan ?? [];
+        $jenisPenyakit = JenisPenyakit::where('status', 1)
+            ->orderBy('nama_penyakit')
+            ->get();
 
-        return view('backend.pemeriksaan.edit', compact('pemeriksaan', 'peserta', 'petugas'));
+        return view('backend.pemeriksaan.edit', compact('pemeriksaan', 'peserta', 'petugas', 'jenisPenyakit', 'petugasTambahan'));
     }
 
 
@@ -239,6 +297,11 @@ class PemeriksaanController extends Controller
             'peserta_id' => 'required',
             'petugas_id' => 'required',
             'tanggal'    => 'required',
+
+            'petugas_tambahan' => 'nullable|array',
+            'petugas_tambahan.*' => 'nullable|exists:petugas,id',
+
+            'riwayat_penyakit' => 'nullable|string',
             'dokumen'    => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
@@ -265,48 +328,138 @@ class PemeriksaanController extends Controller
         $level = $this->getRiskLevel($score);
         $breakdown = $this->getRiskBreakdown($request);
 
+        $petugasTambahan = collect($request->petugas_tambahan ?? [])
+            ->filter(function ($value) {
+                return !is_null($value) && $value !== '';
+            })
+            ->toArray();
+
+        // SIMPAN PENYAKIT BARU KE MASTER JENIS PENYAKIT
+        if ($request->filled('riwayat_penyakit')) {
+
+            $riwayat = json_decode($request->riwayat_penyakit, true);
+
+            if (is_array($riwayat)) {
+
+                foreach ($riwayat as &$item) {
+
+                    // Ambil nama penyakit
+                    $namaPenyakit = is_array($item)
+                        ? ($item['value'] ?? null)
+                        : $item;
+
+
+                    if (!$namaPenyakit) {
+                        continue;
+                    }
+
+
+                    // Cek apakah sudah ada di master
+                    $penyakit = JenisPenyakit::where(
+                        'nama_penyakit',
+                        $namaPenyakit
+                    )->first();
+
+
+                    // Kalau belum ada, buat baru
+                    if (!$penyakit) {
+
+                        $penyakit = JenisPenyakit::create([
+                            'kode' => 'P' . str_pad(
+                                JenisPenyakit::count() + 1,
+                                4,
+                                '0',
+                                STR_PAD_LEFT
+                            ),
+
+                            'nama_penyakit' => $namaPenyakit,
+
+                            'keterangan' => null,
+
+                            'status' => 1,
+                        ]);
+                    }
+
+
+                    // Simpan ID master juga
+                    if (is_array($item)) {
+                        $item['id'] = $penyakit->id;
+                    }
+                }
+
+
+                // Update kembali JSON riwayat penyakit
+                $request->merge([
+                    'riwayat_penyakit' => $riwayat
+                ]);
+            }
+        }
+
         $pemeriksaan->update([
 
+            // IDENTITAS
             'peserta_id' => $request->peserta_id,
             'petugas_id' => $request->petugas_id,
-            'tanggal' => $request->tanggal,
+            'petugas_tambahan' => !empty($petugasTambahan)
+                ? $petugasTambahan
+                : null,
+            'tanggal'    => $request->tanggal,
 
-            'sistol' => $request->sistol,
-            'diastol' => $request->diastol,
-            'nadi' => $request->nadi,
-            'spo2' => $request->spo2,
+            // TANDA VITAL
+            'suhu'        => $request->suhu,
+            'sistol'      => $request->sistol,
+            'diastol'     => $request->diastol,
+            'nadi'        => $request->nadi,
+            'respirasi'   => $request->respirasi,
+            'spo2'        => $request->spo2,
 
-            'berat_badan' => $request->berat_badan,
-            'tinggi_badan' => $request->tinggi_badan,
-            'bmi' => $request->bmi,
+            // ANTROPOMETRI
+            'berat_badan'   => $request->berat_badan,
+            'tinggi_badan'  => $request->tinggi_badan,
+            'bmi'           => $request->bmi,
             'lingkar_perut' => $request->lingkar_perut,
 
-            'keluhan' => $request->keluhan,
-            'kepatuhan' => $request->kepatuhan,
+            // LABORATORIUM
+            'gds'               => $request->gds,
+            'gdp'               => $request->gdp,
+            'g2jpp'             => $request->g2jpp,
+            'hba1c'             => $request->hba1c,
 
-            'gds' => $request->gds,
-            'gdp' => $request->gdp,
-            'g2jpp' => $request->g2jpp,
-            'hba1c' => $request->hba1c,
+            'kolesterol_total'  => $request->kolesterol_total,
+            'ldl'               => $request->ldl,
+            'hdl'               => $request->hdl,
+            'trigliserida'      => $request->trigliserida,
 
-            'kolesterol_total' => $request->kolesterol_total,
-            'ldl' => $request->ldl,
-            'hdl' => $request->hdl,
-            'trigliserida' => $request->trigliserida,
+            'ureum'             => $request->ureum,
+            'kreatinin'         => $request->kreatinin,
+            'egfr'              => $request->egfr,
+            'asam_urat'         => $request->asam_urat,
 
-            'ureum' => $request->ureum,
-            'kreatinin' => $request->kreatinin,
-            'egfr' => $request->egfr,
-            'asam_urat' => $request->asam_urat,
+            // ANAMNESIS
+            'keluhan_utama'          => $request->keluhan_utama,
+            'hamil'                  => $request->has('hamil'),
+            'menyusui'               => $request->has('menyusui'),
+            'status_perokok'         => $request->status_perokok,
 
-            'hasil_lab' => $request->hasil_lab,
+            'riwayat_penyakit' => $request->riwayat_penyakit,
+
+            'riwayat_alergi_obat'    => $request->riwayat_alergi_obat,
+            'riwayat_alergi_lainnya' => $request->riwayat_alergi_lainnya,
+            'obat_dikonsumsi'        => $request->obat_dikonsumsi,
+
+            // CATATAN PROFESIONAL
+            'catatan_dokter' => $request->catatan_dokter,
+            'catatan_gizi' => $request->catatan_gizi,
+            'aktivitas_fisik' => $request->aktivitas_fisik,
             'catatan' => $request->catatan,
 
+            // DOKUMEN
             'dokumen' => $pemeriksaan->dokumen,
 
-            'risk_score' => $score,
-            'risk_level' => $level,
-            'risk_breakdown' => json_encode($breakdown),
+            // RISK
+            'risk_score'      => $score,
+            'risk_level'      => $level,
+            'risk_breakdown'  => json_encode($breakdown),
 
         ]);
 
@@ -449,7 +602,21 @@ class PemeriksaanController extends Controller
             'petugas'
         ])->findOrFail($id);
 
-        return view('backend.pemeriksaan.show', compact('pemeriksaan'));
+        $pemeriksaan->riwayat_penyakit =
+            collect($pemeriksaan->riwayat_penyakit ?? [])
+            ->map(function ($item) {
+                return is_array($item)
+                    ? ($item['value'] ?? '')
+                    : $item;
+            })
+            ->filter()
+            ->values()
+            ->toArray();
+
+        return view(
+            'backend.pemeriksaan.show',
+            compact('pemeriksaan')
+        );
     }
 
     public function history($peserta)
@@ -461,7 +628,13 @@ class PemeriksaanController extends Controller
             ->orderByDesc('tanggal')
             ->get();
 
-        return view('backend.pemeriksaan.history', compact('peserta', 'riwayat'));
+        return view(
+            'backend.pemeriksaan.history',
+            compact(
+                'peserta',
+                'riwayat'
+            )
+        );
     }
     /*
 |--------------------------------------------------------------------------
@@ -473,8 +646,16 @@ class PemeriksaanController extends Controller
     {
         $pemeriksaan = Pemeriksaan::with([
             'peserta',
-            'petugas'
+            'petugas',
         ])->findOrFail($id);
+
+        // Jika role pasien hanya boleh melihat miliknya sendiri
+        if (
+            auth()->user()->hasRole('Pasien') &&
+            $pemeriksaan->peserta_id != auth()->user()->peserta_id
+        ) {
+            abort(403);
+        }
 
         $pdf = Pdf::loadView(
             'backend.pemeriksaan.pdf',
@@ -485,9 +666,9 @@ class PemeriksaanController extends Controller
 
         return $pdf->download(
             'Pemeriksaan_' .
-                $pemeriksaan->peserta->nama .
+                str_replace(' ', '_', $pemeriksaan->peserta->nama) .
                 '_' .
-                $pemeriksaan->tanggal .
+                \Carbon\Carbon::parse($pemeriksaan->tanggal)->format('Y-m-d') .
                 '.pdf'
         );
     }
@@ -505,106 +686,209 @@ class PemeriksaanController extends Controller
         ])->findOrFail($id);
 
         $spreadsheet = new Spreadsheet();
-
         $sheet = $spreadsheet->getActiveSheet();
 
-        $sheet->mergeCells('A1:B1');
+        /*
+    |--------------------------------------------------------------------------
+    | JUDUL
+    |--------------------------------------------------------------------------
+    */
 
-        $sheet->setCellValue(
-            'A1',
-            'LAPORAN HASIL PEMERIKSAAN'
-        );
+        $sheet->mergeCells('A1:B1');
+        $sheet->setCellValue('A1', 'LAPORAN HASIL PEMERIKSAAN PROLANIS');
 
         $sheet->getStyle('A1')->applyFromArray([
             'font' => [
                 'bold' => true,
-                'size' => 16
+                'size' => 16,
             ],
             'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER
-            ]
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+            ],
         ]);
+
+        /*
+    |--------------------------------------------------------------------------
+    | RIWAYAT PENYAKIT
+    |--------------------------------------------------------------------------
+    */
+
+        $riwayat = '-';
+
+        if (!empty($pemeriksaan->riwayat_penyakit)) {
+
+            $riwayat = collect($pemeriksaan->riwayat_penyakit)
+                ->map(function ($item) {
+
+                    if (is_array($item)) {
+                        return $item['value'] ?? '';
+                    }
+
+                    return $item;
+                })
+                ->filter()
+                ->implode(', ');
+        }
+
+        /*
+    |--------------------------------------------------------------------------
+    | PETUGAS TAMBAHAN
+    |--------------------------------------------------------------------------
+    */
+
+        $petugasTambahan = '-';
+
+        if (!empty($pemeriksaan->petugas_tambahan)) {
+
+            $petugasTambahan = Petugas::whereIn(
+                'id',
+                $pemeriksaan->petugas_tambahan
+            )->pluck('nama')->implode(', ');
+        }
+
+        /*
+    |--------------------------------------------------------------------------
+    | DATA
+    |--------------------------------------------------------------------------
+    */
 
         $row = 3;
 
         $data = [
 
-            'Nama' => $pemeriksaan->peserta->nama,
-            'No RM' => $pemeriksaan->peserta->no_rm,
-            'No BPJS' => $pemeriksaan->peserta->no_bpjs,
-            'Tanggal' => $pemeriksaan->tanggal,
-            'Petugas' => $pemeriksaan->petugas->nama,
+            'Nama Peserta'            => $pemeriksaan->peserta->nama,
+            'No RM'                   => $pemeriksaan->peserta->no_rm,
+            'No BPJS'                 => $pemeriksaan->peserta->no_bpjs,
+            'Tanggal Pemeriksaan'     => $pemeriksaan->tanggal->format('d-m-Y'),
 
-            'Sistol' => $pemeriksaan->sistol,
-            'Diastol' => $pemeriksaan->diastol,
-            'Nadi' => $pemeriksaan->nadi,
-            'SpO2' => $pemeriksaan->spo2,
+            'Petugas Pemeriksa'       => $pemeriksaan->petugas->nama ?? '-',
+            'Petugas Tambahan'        => $petugasTambahan,
 
-            'Berat Badan' => $pemeriksaan->berat_badan,
-            'Tinggi Badan' => $pemeriksaan->tinggi_badan,
-            'BMI' => $pemeriksaan->bmi,
-            'Lingkar Perut' => $pemeriksaan->lingkar_perut,
+            '' => '',
 
-            'Keluhan' => $pemeriksaan->keluhan,
-            'Kepatuhan' => $pemeriksaan->kepatuhan,
+            'Keluhan Utama'           => $pemeriksaan->keluhan_utama,
+            'Status Perokok'          => $pemeriksaan->status_perokok,
+            'Hamil'                   => $pemeriksaan->hamil ? 'Ya' : 'Tidak',
+            'Menyusui'                => $pemeriksaan->menyusui ? 'Ya' : 'Tidak',
 
-            'GDS' => $pemeriksaan->gds,
-            'GDP' => $pemeriksaan->gdp,
-            'G2JPP' => $pemeriksaan->g2jpp,
-            'HbA1c' => $pemeriksaan->hba1c,
+            'Riwayat Penyakit'        => $riwayat,
+            'Alergi Obat'             => $pemeriksaan->riwayat_alergi_obat,
+            'Alergi Lainnya'          => $pemeriksaan->riwayat_alergi_lainnya,
+            'Obat Dikonsumsi'         => $pemeriksaan->obat_dikonsumsi,
 
-            'Kolesterol Total' => $pemeriksaan->kolesterol_total,
-            'LDL' => $pemeriksaan->ldl,
-            'HDL' => $pemeriksaan->hdl,
-            'Trigliserida' => $pemeriksaan->trigliserida,
+            '' => '',
 
-            'Ureum' => $pemeriksaan->ureum,
-            'Kreatinin' => $pemeriksaan->kreatinin,
-            'eGFR' => $pemeriksaan->egfr,
-            'Asam Urat' => $pemeriksaan->asam_urat,
+            'Suhu'                    => $pemeriksaan->suhu,
+            'Sistol'                  => $pemeriksaan->sistol,
+            'Diastol'                 => $pemeriksaan->diastol,
+            'Nadi'                    => $pemeriksaan->nadi,
+            'Respirasi'               => $pemeriksaan->respirasi,
+            'SpO2'                    => $pemeriksaan->spo2,
 
-            'Risk Score' => $pemeriksaan->risk_score,
-            'Risk Level' => $pemeriksaan->risk_level,
+            '' => '',
 
-            'Catatan' => $pemeriksaan->catatan
+            'Berat Badan'             => $pemeriksaan->berat_badan,
+            'Tinggi Badan'            => $pemeriksaan->tinggi_badan,
+            'BMI'                     => $pemeriksaan->bmi,
+            'Lingkar Perut'           => $pemeriksaan->lingkar_perut,
 
+            '' => '',
+
+            'GDS'                     => $pemeriksaan->gds,
+            'GDP'                     => $pemeriksaan->gdp,
+            'G2JPP'                   => $pemeriksaan->g2jpp,
+            'HbA1c'                   => $pemeriksaan->hba1c,
+
+            'Kolesterol Total'        => $pemeriksaan->kolesterol_total,
+            'LDL'                     => $pemeriksaan->ldl,
+            'HDL'                     => $pemeriksaan->hdl,
+            'Trigliserida'            => $pemeriksaan->trigliserida,
+
+            'Ureum'                   => $pemeriksaan->ureum,
+            'Kreatinin'               => $pemeriksaan->kreatinin,
+            'eGFR'                    => $pemeriksaan->egfr,
+            'Asam Urat'               => $pemeriksaan->asam_urat,
+
+            '' => '',
+
+            'Kepatuhan Minum Obat'    => $pemeriksaan->kepatuhan,
+
+            'Catatan Dokter'          => $pemeriksaan->catatan_dokter,
+            'Catatan Gizi'            => $pemeriksaan->catatan_gizi,
+            'Exercise Prescription'   => $pemeriksaan->aktivitas_fisik,
+            'Catatan Tambahan'        => $pemeriksaan->catatan,
+
+            '' => '',
+
+            'Risk Score'              => $pemeriksaan->risk_score,
+            'Risk Level'              => $pemeriksaan->risk_level,
         ];
 
-        foreach ($data as $key => $value) {
+        foreach ($data as $label => $value) {
 
-            $sheet->setCellValue('A' . $row, $key);
+            $sheet->setCellValue('A' . $row, $label);
             $sheet->setCellValue('B' . $row, $value);
 
             $row++;
         }
 
-        $sheet->getStyle('A3:B' . $row)
+        /*
+    |--------------------------------------------------------------------------
+    | STYLE
+    |--------------------------------------------------------------------------
+    */
+
+        $sheet->getStyle("A3:B{$row}")
             ->applyFromArray([
                 'borders' => [
                     'allBorders' => [
-                        'borderStyle' => Border::BORDER_THIN
-                    ]
-                ]
+                        'borderStyle' => Border::BORDER_THIN,
+                    ],
+                ],
             ]);
 
-        foreach (range('A', 'B') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
+        $sheet->getStyle("A3:A{$row}")
+            ->applyFromArray([
+                'font' => [
+                    'bold' => true,
+                ],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => [
+                        'rgb' => 'D9EAD3',
+                    ],
+                ],
+            ]);
+
+        foreach (range('A', 'B') as $column) {
+
+            $sheet->getColumnDimension($column)
+                ->setAutoSize(true);
         }
+
+        /*
+    |--------------------------------------------------------------------------
+    | DOWNLOAD
+    |--------------------------------------------------------------------------
+    */
 
         $writer = new Xlsx($spreadsheet);
 
         $filename =
             'Pemeriksaan_' .
-            $pemeriksaan->peserta->nama .
+            str_replace(' ', '_', $pemeriksaan->peserta->nama) .
             '_' .
-            $pemeriksaan->tanggal .
+            $pemeriksaan->tanggal->format('Y-m-d') .
             '.xlsx';
 
-        return response()->streamDownload(function () use ($writer) {
-
-            $writer->save('php://output');
-        }, $filename, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        ]);
+        return response()->streamDownload(
+            function () use ($writer) {
+                $writer->save('php://output');
+            },
+            $filename,
+            [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ]
+        );
     }
 }

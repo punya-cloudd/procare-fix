@@ -112,64 +112,92 @@ class MonitoringMakananController extends Controller
         }
         return view('backend.monitoring_makanan.index');
     }
+
     public function create(Request $request)
     {
-        $peserta = Peserta::orderBy('nama')->get();
         $petugas = Petugas::orderBy('nama')->get();
-        $selectedPeserta = $request->peserta_id;
+        if (Auth::user()->hasRole('Pasien')) {
+            $peserta = Peserta::where('id', Auth::user()->peserta_id)->get();
+            $selectedPeserta = Auth::user()->peserta_id;
+        } else {
+            $peserta = Peserta::orderBy('nama')->get();
+            $selectedPeserta = $request->peserta_id;
+        }
         return view(
             'backend.monitoring_makanan.create',
-            compact('peserta', 'petugas', 'selectedPeserta')
+            compact(
+                'peserta',
+                'petugas',
+                'selectedPeserta'
+            )
         );
     }
+
     public function store(Request $request)
     {
+        $pesertaId = Auth::user()->hasRole('Pasien')
+            ? Auth::user()->peserta_id
+            : $request->peserta_id;
+
         $request->validate([
-            'peserta_id' => 'required',
             'petugas_id' => 'required',
             'tanggal'    => 'required|date'
         ]);
-        $cek = MonitoringMakanan::where('peserta_id', $request->peserta_id)
+
+        $cek = MonitoringMakanan::where('peserta_id', $pesertaId)
             ->whereDate('tanggal', $request->tanggal)
             ->first();
+
         if ($cek) {
             return back()
                 ->withInput()
                 ->with('error', 'Monitoring makanan pada tanggal tersebut sudah ada.');
         }
+
         DB::beginTransaction();
+
         try {
+
             $monitoring = MonitoringMakanan::create([
-                'peserta_id'   => $request->peserta_id,
-                'petugas_id'   => $request->petugas_id,
-                'tanggal'      => $request->tanggal,
-                'catatan'      => $request->catatan,
-                'created_by'   => Auth::id()
+                'peserta_id' => $pesertaId,
+                'petugas_id' => $request->petugas_id,
+                'tanggal'    => $request->tanggal,
+                'catatan'    => $request->catatan,
+                'created_by' => Auth::id(),
             ]);
+
             if ($request->has('waktu_makan')) {
+
                 foreach ($request->waktu_makan as $key => $value) {
+
                     MonitoringMakananDetail::create([
                         'monitoring_makanan_id' => $monitoring->id,
-                        'waktu_makan'   => $request->waktu_makan[$key],
-                        'nama_makanan' => $request->nama_makanan[$key],
-                        'jumlah'        => $request->jumlah[$key],
-                        'satuan'        => $request->satuan[$key],
-                        'kalori'        => $request->kalori[$key],
+                        'waktu_makan'           => $request->waktu_makan[$key],
+                        'nama_makanan'          => $request->nama_makanan[$key],
+                        'jumlah'                => $request->jumlah[$key],
+                        'satuan'                => $request->satuan[$key],
+                        'kalori'                => $request->kalori[$key],
                     ]);
                 }
             }
+
             $this->hitungTotalKalori($monitoring->id);
+
             DB::commit();
+
             return redirect()
                 ->route('monitoring_makanan.index')
                 ->with('success', 'Monitoring makanan berhasil disimpan.');
         } catch (\Exception $e) {
+
             DB::rollBack();
+
             return back()
                 ->withInput()
                 ->with('error', $e->getMessage());
         }
     }
+
     public function show($id)
     {
         $monitoring = MonitoringMakanan::with([

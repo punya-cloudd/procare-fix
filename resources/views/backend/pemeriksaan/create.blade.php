@@ -1,67 +1,103 @@
 @extends('backend.app')
 @section('title', 'Input Pemeriksaan')
-@section('content')
 
+@section('content')
     <div class="container">
         <div class="page-inner">
             <form action="{{ route('pemeriksaan.store') }}" method="POST" enctype="multipart/form-data">
+                @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
                 @csrf
                 <div class="row">
                     <!-- KIRI -->
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h4>Identitas Pasien</h4>
+                    <div class="col-md-10 mx-auto">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-header bg-white">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-user-injured text-primary me-2"></i>
+                                    <h4 class="mb-0">Identitas Pasien</h4>
+                                </div>
                             </div>
                             <div class="card-body">
-                                {{-- SEARCH PESERTA (SELECT2) --}}
                                 @if (!empty($selectedPeserta))
-
-                                    <div class="mb-3">
-                                        <label>Peserta</label>
-
-                                        <input type="text" class="form-control"
-                                            value="{{ $peserta->firstWhere('id', $selectedPeserta)->nama }} - {{ $peserta->firstWhere('id', $selectedPeserta)->no_bpjs }}"
-                                            readonly>
-
-                                        <input type="hidden" name="peserta_id" value="{{ $selectedPeserta }}">
+                                    <div class="row">
+                                        <div class="col-md-8 mb-3">
+                                            <label class="fw-semibold">
+                                                Nama Pasien
+                                            </label>
+                                            <input type="text" class="form-control"
+                                                value="{{ $peserta->firstWhere('id', $selectedPeserta)->nama }} - {{ $peserta->firstWhere('id', $selectedPeserta)->no_bpjs }}"
+                                                readonly>
+                                            <input type="hidden" name="peserta_id" value="{{ $selectedPeserta }}">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="fw-semibold">
+                                                Tanggal Pemeriksaan
+                                            </label>
+                                            <input type="date" class="form-control" name="tanggal"
+                                                value="{{ date('Y-m-d') }}">
+                                        </div>
                                     </div>
                                 @else
-                                    <div class="mb-3">
-                                        <label>Peserta</label>
-
-                                        <select class="form-control select2" name="peserta_id" required>
-                                            <option value="">Cari nama / BPJS...</option>
-
-                                            @foreach ($peserta as $p)
-                                                <option value="{{ $p->id }}"
-                                                    {{ old('peserta_id') == $p->id ? 'selected' : '' }}>
-                                                    {{ $p->nama }} - {{ $p->no_bpjs }}
+                                    <div class="row">
+                                        <div class="col-md-8 mb-3">
+                                            <label class="fw-semibold">
+                                                Nama Pasien
+                                            </label>
+                                            <select class="form-control select2" name="peserta_id" required>
+                                                <option value="">
+                                                    Cari Nama / No. BPJS...
+                                                </option>
+                                                @foreach ($peserta as $p)
+                                                    <option value="{{ $p->id }}"
+                                                        {{ old('peserta_id') == $p->id ? 'selected' : '' }}>
+                                                        {{ $p->nama }}
+                                                        -
+                                                        {{ $p->no_bpjs }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="fw-semibold">
+                                                Tanggal Pemeriksaan
+                                            </label>
+                                            <input type="date" class="form-control" name="tanggal"
+                                                value="{{ date('Y-m-d') }}">
+                                        </div>
+                                    </div>
+                                @endif
+                                <hr>
+                                <h6 class="fw-bold text-primary mb-3">
+                                    <i class="fas fa-user-md me-2"></i>
+                                    Petugas Pemeriksaan
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <select class="form-control select2" name="petugas_id" required>
+                                            <option value="">
+                                                Pilih Petugas
+                                            </option>
+                                            @foreach ($petugas as $pt)
+                                                <option value="{{ $pt->id }}">
+                                                    {{ $pt->nama }}
                                                 </option>
                                             @endforeach
-
                                         </select>
+                                        <small class="text-muted">
+                                            Petugas yang bertanggung jawab terhadap pemeriksaan.
+                                        </small>
                                     </div>
-
-                                @endif
-                                <div class="mb-3">
-                                    <label>Petugas</label>
-                                    <select class="form-control select2" name="petugas_id" required>
-                                        <option value="">Pilih Petugas</option>
-                                        @foreach ($petugas as $pt)
-                                            <option value="{{ $pt->id }}">
-                                                {{ $pt->nama }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label>Tanggal Pemeriksaan</label>
-                                    <input type="date"class="form-control" name="tanggal" value="{{ date('Y-m-d') }}">
                                 </div>
                             </div>
                         </div>
-
                         <!-- VITAL -->
                         <div class="card mt-3">
                             <div class="card-header">
@@ -69,6 +105,17 @@
                             </div>
                             <div class="card-body">
                                 <div class="row">
+                                    <div class="col-md-6">
+                                        <label>Suhu Tubuh (°C)</label>
+                                        <input type="number" step="0.1" name="suhu" class="form-control"
+                                            placeholder="36.5">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label>Nadi (x/menit)</label>
+                                        <input type="number" name="nadi" class="form-control" placeholder="80">
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
                                     <div class="col-md-6">
                                         <label>TD Sistol (mmHg)</label>
                                         <input type="number" name="sistol" class="form-control" placeholder="120">
@@ -80,11 +127,11 @@
                                 </div>
                                 <div class="row mt-3">
                                     <div class="col-md-6">
-                                        <label>Nadi</label>
-                                        <input type="number" name="nadi" class="form-control" placeholder="80">
+                                        <label>Frekuensi Pernapasan (RR)</label>
+                                        <input type="number" name="respirasi" class="form-control" placeholder="20">
                                     </div>
                                     <div class="col-md-6">
-                                        <label>SpO2</label>
+                                        <label>SpO₂ (%)</label>
                                         <input type="number" name="spo2" class="form-control" placeholder="98">
                                     </div>
                                 </div>
@@ -103,7 +150,8 @@
                                 <div class="row mt-3">
                                     <div class="col-md-6">
                                         <label>IMT</label>
-                                        <input type="text" id="bmi" name="bmi" readonly class="form-control">
+                                        <input type="text" id="bmi" name="bmi" readonly
+                                            class="form-control">
                                     </div>
                                     <div class="col-md-6">
                                         <label>Lingkar Perut</label>
@@ -114,81 +162,84 @@
                             </div>
                         </div>
                     </div>
-
                     <!-- KANAN -->
-                    <div class="col-md-6">
+                    <div class="col-md-10 mx-auto">
+                        {{-- LABORATORIUM --}}
                         <div class="card">
                             <div class="card-header">
                                 <h4>Laboratorium</h4>
                             </div>
                             <div class="card-body">
-                                <h6>Glikemik</h6>
+                                {{-- ================= GLIKEMIK ================= --}}
+                                <h6 class="fw-bold text-primary mb-3">
+                                    Pemeriksaan Glikemik
+                                </h6>
                                 <div class="row">
-                                    <div class="col-md-6">
-                                        <label>GDS</label>
+                                    <div class="col-md-6 mb-3">
+                                        <label>GDS (mg/dL)</label>
                                         <input type="number" name="gds" class="form-control" placeholder="120">
                                     </div>
-                                    <div class="col-md-6">
-                                        <label>GDP</label>
+                                    <div class="col-md-6 mb-3">
+                                        <label>GDP (mg/dL)</label>
                                         <input type="number" name="gdp" class="form-control" placeholder="90">
                                     </div>
-                                </div>
-                                <div class="row mt-3">
-                                    <div class="col-md-6">
-                                        <label>G2JPP</label>
+                                    <div class="col-md-6 mb-3">
+                                        <label>G2JPP (mg/dL)</label>
                                         <input type="number" name="g2jpp" class="form-control" placeholder="140">
                                     </div>
-                                    <div class="col-md-6">
-                                        <label>HbA1c</label>
+                                    <div class="col-md-6 mb-3">
+                                        <label>HbA1c (%)</label>
                                         <input type="number" step="0.01" name="hba1c" class="form-control"
                                             placeholder="5.5">
                                     </div>
                                 </div>
                                 <hr>
-                                <h6>Lipid</h6>
+                                {{-- ================= LIPID ================= --}}
+                                <h6 class="fw-bold text-primary mb-3">
+                                    Profil Lipid
+                                </h6>
                                 <div class="row">
-                                    <div class="col-md-6">
-                                        <label>Kolesterol</label>
+                                    <div class="col-md-6 mb-3">
+                                        <label>Kolesterol Total</label>
                                         <input type="number" name="kolesterol_total" class="form-control"
                                             placeholder="180">
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-6 mb-3">
                                         <label>LDL</label>
                                         <input type="number" name="ldl" class="form-control" placeholder="100">
                                     </div>
-                                </div>
-                                <div class="row mt-3">
-                                    <div class="col-md-6">
+                                    <div class="col-md-6 mb-3">
                                         <label>HDL</label>
                                         <input type="number" name="hdl" class="form-control" placeholder="50">
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-6 mb-3">
                                         <label>Trigliserida</label>
                                         <input type="number" name="trigliserida" class="form-control"
                                             placeholder="120">
                                     </div>
                                 </div>
                                 <hr>
-                                <h6>Ginjal</h6>
+                                {{-- ================= GINJAL ================= --}}
+                                <h6 class="fw-bold text-primary mb-3">
+                                    Fungsi Ginjal
+                                </h6>
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-6 mb-3">
                                         <label>Ureum</label>
                                         <input type="number" step="0.01" name="ureum" class="form-control"
                                             placeholder="30">
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-6 mb-3">
                                         <label>Kreatinin</label>
                                         <input type="number" step="0.01" name="kreatinin" class="form-control"
                                             placeholder="1.0">
                                     </div>
-                                </div>
-                                <div class="row mt-3">
-                                    <div class="col-md-6">
+                                    <div class="col-md-6 mb-3">
                                         <label>eGFR</label>
                                         <input type="number" step="0.01" name="egfr" class="form-control"
                                             placeholder="90">
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-6 mb-3">
                                         <label>Asam Urat</label>
                                         <input type="number" step="0.01" name="asam_urat" class="form-control"
                                             placeholder="6">
@@ -197,85 +248,253 @@
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- KELUHAN -->
-                <div class="row mt-3">
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h4>Keluhan, Kepatuhan & Dokumen</h4>
-                            </div>
-                            <div class="card-body">
-                                <label>Keluhan</label>
-                                <textarea name="keluhan" class="form-control" rows="3" placeholder="Keluhan pasien..."></textarea>
-                                <div class="mt-3">
-                                    <label>Kepatuhan</label>
-                                    <select name="kepatuhan" class="form-control">
-                                        <option>Patuh (>80%)</option>
-                                        <option>Cukup Patuh (50-80%)</option>
-                                        <option>Tidak Patuh (<50%)< /option>
-                                    </select>
+                    <!-- DATA KESEHATAN -->
+                    <div class="row mt-3">
+                        <div class="col-md-10 mx-auto">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4>Data Kesehatan (Anamnesis)</h4>
                                 </div>
-                                <hr>
-                                <label>Upload Dokumen (Opsional)</label>
-                                <input type="file" name="dokumen" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                                <small class="text-muted">
-                                    Format yang diperbolehkan:
-                                    PDF, JPG, JPEG, PNG
-                                    <br>
-                                    Maksimal ukuran 5 MB.
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- SCORE -->
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h4>Skor Risiko</h4>
-                            </div>
-                            <div class="card-body">
-                                <div class="d-flex align-items-center">
-                                    <div id="circleScore"
-                                        style="width:70px;height:70px;border-radius:50%;background:conic-gradient(#22c55e 0deg,#e5e7eb 0deg);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;">
-                                        <div
-                                            style="background:white;width:55px;height:55px;border-radius:50%;display:flex;align-items:center;justify-content:center;">
-                                            <span id="scoreNum">0</span>
+                                <div class="card-body">
+                                    {{-- Keluhan --}}
+                                    <div class="mb-4">
+                                        <label class="fw-semibold">
+                                            Keluhan Utama
+                                        </label>
+                                        <textarea name="keluhan_utama" rows="3" class="form-control" placeholder="Tuliskan keluhan utama pasien..."></textarea>
+                                    </div>
+                                    <div class="row">
+                                        {{-- Kehamilan --}}
+                                        <div class="col-md-6 mb-3">
+                                            <label class="fw-semibold">
+                                                Status Kehamilan
+                                            </label>
+                                            <div class="mt-2">
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="checkbox" name="hamil"
+                                                        value="1">
+                                                    <label class="form-check-label">
+                                                        Hamil
+                                                    </label>
+                                                </div>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="checkbox" name="menyusui"
+                                                        value="1">
+                                                    <label class="form-check-label">
+                                                        Menyusui
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {{-- Perokok --}}
+                                        <div class="col-md-6 mb-3">
+                                            <label class="fw-semibold">
+                                                Status Perokok
+                                            </label>
+                                            <select name="status_perokok" class="form-control">
+                                                <option value="">
+                                                    Pilih Status
+                                                </option>
+                                                <option value="Tidak Merokok">
+                                                    Tidak Merokok
+                                                </option>
+                                                <option value="Perokok Pasif">
+                                                    Perokok Pasif
+                                                </option>
+                                                <option value="Perokok Aktif">
+                                                    Perokok Aktif
+                                                </option>
+                                                <option value="Mantan Perokok">
+                                                    Mantan Perokok
+                                                </option>
+                                            </select>
                                         </div>
                                     </div>
-                                    <div class="ms-3">
-                                        <h6 id="riskLabel">Risiko Rendah</h6>
-                                        <small>Skor: <span id="scoreText">0</span></small>
-                                        <ul id="riskAdvice" class="mt-2">
-                                            <li>Isi data pasien</li>
-                                        </ul>
+                                    {{-- RIWAYAT PENYAKIT --}}
+                                    <div class="mb-4">
+                                        <label class="fw-semibold">
+                                            Riwayat Penyakit
+                                        </label>
+                                        <input id="riwayatPenyakit" name="riwayat_penyakit" class="form-control"
+                                            placeholder="Ketik atau pilih riwayat penyakit">
+                                        <small class="text-muted">
+                                            Tekan Enter setelah mengetik penyakit.
+                                        </small>
+                                    </div>
+                                    {{-- ALERGI --}}
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="fw-semibold">
+                                                Riwayat Alergi Obat
+                                            </label>
+                                            <textarea name="riwayat_alergi_obat" rows="3" class="form-control" placeholder="Contoh : Amoxicillin"></textarea>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="fw-semibold">
+                                                Riwayat Alergi Lainnya
+                                            </label>
+                                            <textarea name="riwayat_alergi_lainnya" rows="3" class="form-control" placeholder="Contoh : Seafood, Debu"></textarea>
+                                        </div>
+                                    </div>
+                                    {{-- OBAT --}}
+                                    <div>
+                                        <label class="fw-semibold">
+                                            Obat yang Sedang Dikonsumsi
+                                        </label>
+                                        <textarea name="obat_dikonsumsi" rows="3" class="form-control"
+                                            placeholder="Tuliskan obat yang sedang dikonsumsi"></textarea>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                    <!-- INTERVENSI PROFESIONAL -->
+                    <div class="row mt-3">
+                        <div class="col-md-10 mx-auto">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4>
+                                        Intervensi Profesional
+                                    </h4>
+                                </div>
+                                <div class="card-body">
+                                    {{-- CATATAN DOKTER --}}
+                                    <div class="mb-4">
+                                        <label class="fw-semibold">
+                                            Catatan Dokter / Assessment Klinis
+                                        </label>
+                                        <div class="row mt-2">
+                                            <div class="col-md-6 mb-3">
+                                                <label>Dokter Pemeriksa</label>
+                                                <select class="form-control select2" name="petugas_tambahan[dokter]">
+                                                    <option value="">
+                                                        Pilih Dokter
+                                                    </option>
+                                                    @foreach ($petugas as $pt)
+                                                        <option value="{{ $pt->id }}">
+                                                            {{ $pt->nama }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <textarea name="catatan_dokter" rows="4" class="form-control"
+                                            placeholder="Tuliskan assessment dokter, diagnosis, terapi, dan catatan klinis pasien..."></textarea>
+                                    </div>
 
-                <div class="d-flex justify-content-between align-items-center mt-4">
-                    <a href="{{ route('pemeriksaan.index') }}" class="btn text-white shadow-sm px-4 py-2"
-                        style="background:linear-gradient(to right,#667eea,#764ba2);border:none;font-weight:500;">
-                        <i class="fas fa-arrow-left me-2"></i>
-                        Kembali
-                    </a>
-                    <div>
-                        <button type="reset" class="btn btn-light border shadow-sm px-4 py-2 me-2">
-                            <i class="fas fa-undo-alt me-2"></i>
-                            Reset
-                        </button>
-                        <button type="submit" class="btn text-white shadow-sm px-4 py-2"
-                            style="background:linear-gradient(to right,#36d1dc,#5b86e5);border:none;font-weight:500;">
-                            <i class="fas fa-save me-2"></i>
-                            Simpan Pemeriksaan
-                        </button>
+                                    {{-- GIZI --}}
+                                    <div class="mb-4">
+                                        <label class="fw-semibold">
+                                            Asuhan Gizi / Konseling Nutrisi
+                                        </label>
+                                        <div class="row mt-2">
+                                            <div class="col-md-6 mb-3">
+                                                <label>Petugas Gizi</label>
+                                                <select class="form-control select2" name="petugas_tambahan[gizi]">
+                                                    <option value="">
+                                                        Pilih Petugas
+                                                    </option>
+                                                    @foreach ($petugas as $pt)
+                                                        <option value="{{ $pt->id }}">
+                                                            {{ $pt->nama }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <textarea name="catatan_gizi" rows="4" class="form-control"
+                                            placeholder="Tuliskan rekomendasi diet, pola makan, kebutuhan nutrisi, dan konseling gizi..."></textarea>
+                                    </div>
+
+                                    {{-- AKTIVITAS FISIK --}}
+                                    <div>
+                                        <label class="fw-semibold">
+                                            Aktivitas Fisik / Exercise Prescription
+                                        </label>
+                                        <div class="row mt-2">
+                                            <div class="col-md-6 mb-3">
+                                                <label>Petugas Exercise</label>
+                                                <select class="form-control select2" name="petugas_tambahan[exercise]">
+                                                    <option value="">
+                                                        Pilih Petugas
+                                                    </option>
+                                                    @foreach ($petugas as $pt)
+                                                        <option value="{{ $pt->id }}">
+                                                            {{ $pt->nama }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <textarea name="aktivitas_fisik" rows="4" class="form-control"
+                                            placeholder="Tuliskan aktivitas fisik pasien atau rekomendasi latihan (contoh: jalan kaki 30 menit/hari)..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                    <!-- KELUHAN -->
+                    <div class="row mt-3">
+                        <div class="col-md-10 mx-auto">
+                            <div class="card">
+                                <div class="card-body">
+                                    <label>Upload Dokumen (Opsional)</label>
+                                    <input type="file" name="dokumen" class="form-control"
+                                        accept=".pdf,.jpg,.jpeg,.png">
+                                    <small class="text-muted">
+                                        Format yang diperbolehkan:
+                                        PDF, JPG, JPEG, PNG
+                                        <br>
+                                        Maksimal ukuran 5 MB.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- SCORE -->
+                        <div class="col-md-10 mx-auto">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4>Skor Risiko</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div id="circleScore"
+                                            style="width:70px;height:70px;border-radius:50%;background:conic-gradient(#22c55e 0deg,#e5e7eb 0deg);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;">
+                                            <div
+                                                style="background:white;width:55px;height:55px;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                                                <span id="scoreNum">0</span>
+                                            </div>
+                                        </div>
+                                        <div class="ms-3">
+                                            <h6 id="riskLabel">Risiko Rendah</h6>
+                                            <small>Skor: <span id="scoreText">0</span></small>
+                                            <ul id="riskAdvice" class="mt-2">
+                                                <li>Isi data pasien</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <a href="{{ route('pemeriksaan.index') }}" class="btn text-white shadow-sm px-4 py-2"
+                            style="background:linear-gradient(to right,#667eea,#764ba2);border:none;font-weight:500;">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Kembali
+                        </a>
+                        <div>
+                            <button type="reset" class="btn btn-light border shadow-sm px-4 py-2 me-2">
+                                <i class="fas fa-undo-alt me-2"></i>
+                                Reset
+                            </button>
+                            <button type="submit" class="btn text-white shadow-sm px-4 py-2"
+                                style="background:linear-gradient(to right,#36d1dc,#5b86e5);border:none;font-weight:500;">
+                                <i class="fas fa-save me-2"></i>
+                                Simpan Pemeriksaan
+                            </button>
+                        </div>
+                    </div>
             </form>
         </div>
     </div>
@@ -284,11 +503,23 @@
 @section('script')
     <script>
         $(document).ready(function() {
-
             // ================= SELECT2 =================
             $('.select2').select2({
                 placeholder: "Cari nama pasien...",
                 width: '100%'
+            });
+
+            const input = document.querySelector('#riwayatPenyakit');
+            const tagify = new Tagify(input, {
+                whitelist: [
+                    @foreach ($jenisPenyakit as $jp)
+                        "{{ $jp->nama_penyakit }}",
+                    @endforeach
+                ],
+                dropdown: {
+                    enabled: 1,
+                    maxItems: 10
+                }
             });
 
             // ================= BMI =================
@@ -312,21 +543,46 @@
             function calculateAll() {
                 let score = 0;
                 let hasInput = false;
-
-                // VITAL
+                // ================= VITAL =================
+                let suhu = parseFloat($("input[name='suhu']").val());
                 let sistol = parseFloat($("input[name='sistol']").val());
                 let diastol = parseFloat($("input[name='diastol']").val());
-                let bmi = parseFloat($("#bmi").val());
+                let respirasi = parseFloat($("input[name='respirasi']").val());
                 let spo2 = parseFloat($("input[name='spo2']").val());
                 let nadi = parseFloat($("input[name='nadi']").val());
-                if (sistol || diastol || bmi || spo2 || nadi) hasInput = true;
-                if (sistol >= 140 || diastol >= 90) score += 25;
-                else if (sistol >= 130 || diastol >= 85) score += 15;
-                if (bmi >= 30) score += 20;
-                else if (bmi >= 25) score += 10;
-                if (spo2 && spo2 < 92) score += 15;
-                if (nadi && (nadi > 100 || nadi < 60)) score += 10;
+                let bmi = parseFloat($("#bmi").val());
 
+                if (
+                    suhu ||
+                    sistol ||
+                    diastol ||
+                    respirasi ||
+                    spo2 ||
+                    nadi ||
+                    bmi
+                ) hasInput = true;
+                // Tekanan darah
+                if (sistol >= 140 || diastol >= 90)
+                    score += 25;
+                else if (sistol >= 130 || diastol >= 85)
+                    score += 15;
+                // BMI
+                if (bmi >= 30)
+                    score += 20;
+                else if (bmi >= 25)
+                    score += 10;
+                // Saturasi
+                if (spo2 && spo2 < 92)
+                    score += 15;
+                // Nadi
+                if (nadi && (nadi > 100 || nadi < 60))
+                    score += 10;
+                // Suhu
+                if (suhu && (suhu >= 38 || suhu < 35))
+                    score += 10;
+                // Respirasi
+                if (respirasi && (respirasi > 24 || respirasi < 12))
+                    score += 10;
                 // GLIKEMIK
                 let gdp = parseFloat($("input[name='gdp']").val());
                 let hba1c = parseFloat($("input[name='hba1c']").val());
@@ -356,19 +612,18 @@
                 if (egfr && egfr < 30) score += 30;
                 else if (egfr && egfr < 60) score += 15;
                 if (kreatinin && kreatinin > 1.3) score += 15;
-                // ASAM URAT
 
+                // ASAM URAT
                 let asam = parseFloat($("input[name='asam_urat']").val());
                 if (asam) hasInput = true;
                 if (asam > 9) score += 20;
                 else if (asam > 7) score += 10;
-                // SAFETY
 
+                // SAFETY
                 if (!hasInput) score = 0;
                 if (score > 100) score = 100;
                 updateUI(score);
             }
-
             // ================= UPDATE UI =================
             function updateUI(score) {
                 $("#scoreNum").text(score);

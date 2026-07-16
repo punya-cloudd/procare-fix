@@ -93,8 +93,27 @@
                                     <i class="fa fa-arrow-left"></i>
                                     Kembali
                                 </a> --}}
+                                <div class="d-flex justify-content-between align-items-center mt-4">
+                                    <a href="{{ route('monitoring_makanan.index') }}" class="btn text-white shadow-sm px-4 py-2"
+                                        style="background:linear-gradient(to right,#667eea,#764ba2);border:none;font-weight:500;">
+                                        <i class="fas fa-arrow-left me-2"></i>
+                                        Kembali
+                                    </a>
+                                    <div>
+                                        <button type="reset" class="btn btn-light border shadow-sm px-4 py-2 me-2">
+                                            <i class="fas fa-undo-alt me-2"></i>
+                                            Reset
+                                        </button>
+                                        <button type="submit" class="btn text-white shadow-sm px-4 py-2"
+                                            style="background:linear-gradient(to right,#36d1dc,#5b86e5);border:none;font-weight:500;">
+                                            <i class="fas fa-save me-2"></i>
+                                            Simpan
+                                        </button>
+                                    </div>
+                                </div>
 
-                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-3 mt-4">
+                                {{-- <div
+                                    class="d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-3 mt-4">
                                     <a href="{{ route('monitoring_makanan.index') }}"
                                         class="btn text-white w-100 w-md-auto shadow-sm px-4 py-2"
                                         style="background:linear-gradient(to right,#667eea,#764ba2);border:none;font-weight:500;">
@@ -112,7 +131,7 @@
                                             Simpan
                                         </button>
                                     </div>
-                                </div>
+                                </div> --}}
                             </form>
                         </div>
                     </div>
@@ -256,27 +275,28 @@
     </script>
 
     <style>
-@media (max-width: 768px){
+        @media (max-width: 768px) {
 
-    .card-header h4{
-        font-size:18px;
-    }
+            .card-header h4 {
+                font-size: 18px;
+            }
 
-    .table td,
-    .table th{
-        white-space: nowrap;
-        vertical-align: middle;
-    }
+            .table td,
+            .table th {
+                white-space: nowrap;
+                vertical-align: middle;
+            }
 
-    #btnTambah{
-        width:100%;
-        margin-top:10px;
-    }
+            #btnTambah {
+                width: 100%;
+                margin-top: 10px;
+            }
 
-    .btn{
-        margin-bottom:8px;
-    }
-}
-</style>
+            .btn {
+                margin-bottom: 8px;
+            }
+
+        }
+    </style>
 
 @endsection

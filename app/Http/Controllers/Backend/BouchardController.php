@@ -161,10 +161,19 @@ class BouchardController extends Controller
 
     public function create(Request $request)
     {
-        $peserta = Peserta::orderBy('nama')->get();
         $petugas = Petugas::orderBy('nama')->get();
 
-        $selectedPeserta = $request->peserta_id;
+        if (auth()->user()->hasRole('Pasien')) {
+
+            $peserta = Peserta::where('id', auth()->user()->peserta_id)->get();
+
+            $selectedPeserta = auth()->user()->peserta_id;
+        } else {
+
+            $peserta = Peserta::orderBy('nama')->get();
+
+            $selectedPeserta = $request->peserta_id;
+        }
 
         return view(
             'backend.bouchard.create',
@@ -179,6 +188,12 @@ class BouchardController extends Controller
 
     public function store(Request $request)
     {
+
+        if (auth()->user()->hasRole('Pasien')) {
+            $request->merge([
+                'peserta_id' => auth()->user()->peserta_id
+            ]);
+        }
 
         $request->validate([
 

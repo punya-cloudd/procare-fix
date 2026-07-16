@@ -17,23 +17,40 @@ return new class extends Migration
             // RELASI
             $table->unsignedBigInteger('peserta_id')->comment('Relasi ke tabel peserta');
             $table->unsignedBigInteger('petugas_id')->comment('Relasi ke tabel petugas');
+
+            // Petugas pendamping (disimpan dalam bentuk JSON)
+            $table->json('petugas_tambahan')->nullable()->comment('Daftar petugas pendamping');
+
             $table->date('tanggal');
 
-            // VITAL
-            $table->integer('sistol')->nullable();
-            $table->integer('diastol')->nullable();
-            $table->integer('nadi')->nullable();
-            $table->integer('spo2')->nullable();
+            // ANAMNESIS / DATA KESEHATAN
+            $table->text('keluhan_utama')->nullable();
+            $table->boolean('hamil')->default(false);
+            $table->boolean('menyusui')->default(false);
+            $table->enum('status_perokok', [
+                'Tidak Merokok',
+                'Perokok Pasif',
+                'Perokok Aktif',
+                'Mantan Perokok'
+            ])->nullable();
+            $table->json('riwayat_penyakit')->nullable();
+            $table->text('riwayat_alergi_obat')->nullable();
+            $table->text('riwayat_alergi_lainnya')->nullable();
+            $table->text('obat_dikonsumsi')->nullable();
+
+            // TANDA VITAL
+            $table->decimal('suhu', 4, 1)->nullable()->comment('Suhu Tubuh');
+            $table->integer('sistol')->nullable()->comment('Tekanan darah sistolik');
+            $table->integer('diastol')->nullable()->comment('Tekanan darah diastolik');
+            $table->integer('nadi')->nullable()->comment('Frekuensi nadi');
+            $table->integer('respirasi')->nullable()->comment('Frekuensi pernapasan');
+            $table->integer('spo2')->nullable()->comment('Saturasi oksigen');
 
             // ANTROPOMETRI
             $table->decimal('berat_badan', 5, 2)->nullable();
             $table->decimal('tinggi_badan', 5, 2)->nullable();
             $table->decimal('bmi', 5, 2)->nullable();
             $table->decimal('lingkar_perut', 5, 2)->nullable();
-
-            // KELUHAN
-            $table->text('keluhan')->nullable();
-            $table->string('kepatuhan')->nullable();
 
             // GLIKEMIK
             $table->integer('gds')->nullable();
@@ -56,6 +73,9 @@ return new class extends Migration
             // HASIL
             $table->text('hasil_lab')->nullable();
             $table->text('catatan')->nullable();
+            $table->text('catatan_dokter')->nullable()->comment('Assessment dan catatan klinis dokter');
+            $table->text('catatan_gizi')->nullable()->comment('Asuhan gizi dan konseling nutrisi');
+            $table->text('aktivitas_fisik')->nullable()->comment('Aktivitas fisik dan exercise prescription');
 
             // DOKUMEN PEMERIKSAAN
             $table->string('dokumen')->nullable()->comment('Path file PDF/JPG/PNG pemeriksaan');

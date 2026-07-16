@@ -8,8 +8,11 @@
                 <div class="card-header">
                     <div class="d-flex align-items-center">
                         <h4 class="card-title">Kuisioner Latihan Fisik Bouchard</h4>
-                        <a href="{{ route('bouchard.create') }}" class="btn btn-primary btn-sm ms-auto">
-                            <i class="fa fa-plus"></i> Tambah Kuisioner </a>
+                        <a href="{{ route('bouchard.create') }}"
+   class="btn btn-primary shadow-sm px-4 ms-auto">
+    <i class="fas fa-plus-circle me-2"></i>
+    Tambah Data Kuisioner
+</a>
                     </div>
                 </div>
                 <div class="card-body">

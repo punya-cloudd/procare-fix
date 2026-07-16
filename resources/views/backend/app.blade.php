@@ -25,7 +25,7 @@
                 ],
                 urls: ["{{ url('backend/assets/css/fonts.min.css') }}"]
             },
-            active: function () {
+            active: function() {
                 sessionStorage.fonts = true;
             }
         });
@@ -38,8 +38,14 @@
     <link rel="stylesheet" href="{{ url('backend/assets/css/custom.css') }}">
 
     <link rel="stylesheet" href="{{ url('backend/assets/css/demo.css') }}">
-    
-    
+
+    <link href="tom-select.css" rel="stylesheet">
+    <script src="tom-select.complete.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css">
+    <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
+
+
     @yield('styles')
 </head>
 
@@ -73,7 +79,7 @@
 
     <!-- SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+
     <!-- Chart JS -->
     <script src="{{ url('backend/assets/js/plugin/chart.js/chart.min.js') }}"></script>
 
@@ -101,7 +107,7 @@
             });
         });
 
-        @if(session('success'))
+        @if (session('success'))
             Swal.fire({
                 title: 'Berhasil!',
                 text: '{{ session('success') }}',
@@ -110,7 +116,7 @@
             });
         @endif
 
-        @if(session('error'))
+        @if (session('error'))
             Swal.fire({
                 title: 'Gagal!',
                 text: '{{ session('error') }}',
@@ -122,4 +128,5 @@
 
     @yield('script')
 </body>
+
 </html>

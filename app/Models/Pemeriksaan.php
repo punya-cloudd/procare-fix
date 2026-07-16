@@ -12,50 +12,56 @@ class Pemeriksaan extends Model
     protected $table = 'pemeriksaan';
 
     protected $fillable = [
-
         'peserta_id',
         'petugas_id',
+        'petugas_tambahan',
         'tanggal',
 
-        // Tanda Vital
+        'keluhan_utama',
+        'hamil',
+        'menyusui',
+        'status_perokok',
+
+        'riwayat_penyakit',
+        'riwayat_alergi_obat',
+        'riwayat_alergi_lainnya',
+        'obat_dikonsumsi',
+
+        'suhu',
         'sistol',
         'diastol',
         'nadi',
+        'respirasi',
         'spo2',
 
-        // Antropometri
         'berat_badan',
         'tinggi_badan',
         'bmi',
         'lingkar_perut',
 
-        // Keluhan
-        'keluhan',
         'kepatuhan',
 
-        // Glikemik
         'gds',
         'gdp',
         'g2jpp',
         'hba1c',
 
-        // Profil Lipid
         'kolesterol_total',
         'ldl',
         'hdl',
         'trigliserida',
 
-        // Fungsi Ginjal
         'ureum',
         'kreatinin',
         'egfr',
         'asam_urat',
 
-        // Catatan
         'hasil_lab',
         'catatan',
-
-        // Dokumen
+        'catatan_dokter',
+        'catatan_gizi',
+        'aktivitas_fisik',
+        
         'dokumen',
 
         'risk_score',
@@ -63,10 +69,38 @@ class Pemeriksaan extends Model
         'risk_breakdown',
     ];
 
+    protected $casts = [
+
+        'petugas_tambahan' => 'array',
+        'tanggal' => 'date',
+
+        'hamil' => 'boolean',
+        'menyusui' => 'boolean',
+
+        'riwayat_penyakit' => 'array',
+        'risk_breakdown' => 'array',
+
+        'berat_badan' => 'decimal:2',
+        'tinggi_badan' => 'decimal:2',
+        'bmi' => 'decimal:2',
+        'lingkar_perut' => 'decimal:2',
+
+        'suhu' => 'decimal:1',
+        'hba1c' => 'decimal:2',
+        'kreatinin' => 'decimal:2',
+    ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | RELATIONSHIP
+    |--------------------------------------------------------------------------
+    */
+
     public function peserta()
     {
         return $this->belongsTo(Peserta::class, 'peserta_id');
     }
+
     public function petugas()
     {
         return $this->belongsTo(Petugas::class, 'petugas_id');

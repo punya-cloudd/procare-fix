@@ -1,26 +1,19 @@
 @extends('backend.app')
-
 @section('title', 'Tambah Data Peserta')
 
 @section('content')
     <div class="container">
         <div class="page-inner">
             <div class="row">
-                <div class="col-md-12">
-
+                <div class="col-md-10 mx-auto">
                     <div class="card">
-
                         <div class="card-header">
                             <h4 class="card-title">Tambah Data Peserta Prolanis</h4>
                         </div>
-
                         <div class="card-body">
-
                             <form action="{{ route('peserta.store') }}" method="POST">
                                 @csrf
-
                                 <div class="row">
-
                                     <div class="col-md-6 mb-3">
                                         <label>No BPJS</label>
                                         <input type="text" name="no_bpjs" class="form-control"
@@ -38,7 +31,7 @@
                                         <input type="text" name="nama" class="form-control"
                                             placeholder="Nama sesuai KTP" required>
                                     </div>
-
+                                    
                                     <div class="col-md-6 mb-3">
                                         <label>Jenis Kelamin</label>
                                         <select name="jk" class="form-control" required>
@@ -98,9 +91,7 @@
 
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center mt-4">
-                                    <a href="{{ route('peserta.index') }}"
-                                        class="btn text-white shadow-sm px-4 py-2"
-                                        style="background:linear-gradient(to right,#667eea,#764ba2);border:none;font-weight:500;">
+                                    <a href="{{ route('peserta.index') }}" class="btn text-white shadow-sm px-4 py-2" style="background:linear-gradient(to right,#667eea,#764ba2);border:none;font-weight:500;">
                                         <i class="fas fa-arrow-left me-2"></i>
                                         Kembali
                                     </a>
@@ -109,17 +100,14 @@
                                             <i class="fas fa-undo-alt me-2"></i>
                                             Reset
                                         </button>
-                                        <button type="submit" class="btn text-white shadow-sm px-4 py-2"
-                                            style="background:linear-gradient(to right,#36d1dc,#5b86e5);border:none;font-weight:500;">
+                                        <button type="submit" class="btn text-white shadow-sm px-4 py-2" style="background:linear-gradient(to right,#36d1dc,#5b86e5);border:none;font-weight:500;">
                                             <i class="fas fa-save me-2"></i>
                                             Simpan
                                         </button>
                                     </div>
                                 </div>
                             </form>
-
                         </div>
-
                     </div>
                 </div>
             </div>

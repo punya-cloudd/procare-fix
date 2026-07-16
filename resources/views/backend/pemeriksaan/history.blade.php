@@ -91,9 +91,7 @@
                                     <th width="60">No</th>
                                     <th>Tanggal</th>
                                     <th>Petugas</th>
-                                    <th>Tekanan Darah</th>
-                                    <th>Risk Score</th>
-                                    <th>Level</th>
+                                    <th>Petugas Tambahan</th>
                                     <th>Dokumen</th>
                                     <th width="170">Aksi</th>
                                 </tr>
@@ -109,19 +107,30 @@
                                             {{ $item->petugas->nama ?? '-' }}
                                         </td>
                                         <td>
-                                            {{ $item->sistol }}/{{ $item->diastol }}
-                                        </td>
-                                        <td>
-                                            <span
-                                                class="badge bg-{{ $item->risk_score >= 70 ? 'danger' : ($item->risk_score >= 40 ? 'warning text-dark' : 'success') }}">
-                                                {{ $item->risk_score }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span
-                                                class="badge bg-{{ $item->risk_score >= 70 ? 'danger' : ($item->risk_score >= 40 ? 'warning text-dark' : 'success') }}">
-                                                {{ $item->risk_level }}
-                                            </span>
+                                            @php
+                                                $tambahan = is_array($item->petugas_tambahan)
+                                                    ? $item->petugas_tambahan
+                                                    : json_decode($item->petugas_tambahan, true);
+                                            @endphp
+
+                                            @if (!empty($tambahan))
+                                                @foreach ($tambahan as $role => $id)
+                                                    @php
+                                                        $petugas = \App\Models\Petugas::find($id);
+                                                    @endphp
+
+                                                    @if ($petugas)
+                                                        <div class="mb-1">
+                                                            <span class="badge bg-primary">
+                                                                {{ ucfirst($role) }}
+                                                            </span>
+                                                            {{ $petugas->nama }}
+                                                        </div>
+                                                    @endif
+                                                @endforeach
+                                            @else
+                                                -
+                                            @endif
                                         </td>
                                         <td class="text-center">
 
@@ -167,13 +176,13 @@
                                                             Edit Pemeriksaan
                                                         </a>
                                                     </li>
-                                                    {{-- <li>
+                                                    <li>
                                                         <a class="dropdown-item"
                                                             href="{{ route('pemeriksaan.pdf', $item->id) }}">
                                                             <i class="fa fa-file-pdf me-2 text-danger"></i>
                                                             Export PDF
                                                         </a>
-                                                    </li> --}}
+                                                    </li>
 
                                                     <li>
                                                         <a class="dropdown-item"
