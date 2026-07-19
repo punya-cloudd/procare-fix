@@ -28,7 +28,7 @@ class MonitoringMakananController extends Controller
                 ->whereHas('monitoringMakanan')
                 ->withCount('monitoringMakanan');
 
-            if (auth()->user()->hasRole('Pasien')) {
+            if (auth()->user()->hasRole('Peserta')) {
                 $query->where('id', auth()->user()->peserta_id);
             }
 
@@ -116,7 +116,7 @@ class MonitoringMakananController extends Controller
     public function create(Request $request)
     {
         $petugas = Petugas::orderBy('nama')->get();
-        if (Auth::user()->hasRole('Pasien')) {
+        if (Auth::user()->hasRole('Peserta')) {
             $peserta = Peserta::where('id', Auth::user()->peserta_id)->get();
             $selectedPeserta = Auth::user()->peserta_id;
         } else {
@@ -135,7 +135,7 @@ class MonitoringMakananController extends Controller
 
     public function store(Request $request)
     {
-        $pesertaId = Auth::user()->hasRole('Pasien')
+        $pesertaId = Auth::user()->hasRole('Peserta')
             ? Auth::user()->peserta_id
             : $request->peserta_id;
 
@@ -206,7 +206,7 @@ class MonitoringMakananController extends Controller
             'detail'
         ])->findOrFail($id);
         if (
-            auth()->user()->hasRole('Pasien') &&
+            auth()->user()->hasRole('Peserta') &&
             $monitoring->peserta_id != auth()->user()->peserta_id
         ) {
             abort(403);
@@ -224,7 +224,7 @@ class MonitoringMakananController extends Controller
             'petugas'
         ])->findOrFail($id);
         if (
-            auth()->user()->hasRole('Pasien') &&
+            auth()->user()->hasRole('Peserta') &&
             $monitoring->peserta_id != auth()->user()->peserta_id
         ) {
             abort(403);
@@ -248,7 +248,7 @@ class MonitoringMakananController extends Controller
             'tanggal' => 'required|date'
         ]);
         if (
-            auth()->user()->hasRole('Pasien') &&
+            auth()->user()->hasRole('Peserta') &&
             $monitoring->peserta_id != auth()->user()->peserta_id
         ) {
             abort(403);
@@ -309,7 +309,7 @@ class MonitoringMakananController extends Controller
         $monitoring = MonitoringMakanan::findOrFail($id);
 
         if (
-            auth()->user()->hasRole('Pasien') &&
+            auth()->user()->hasRole('Peserta') &&
             $monitoring->peserta_id != auth()->user()->peserta_id
         ) {
             abort(403);
@@ -341,7 +341,7 @@ class MonitoringMakananController extends Controller
     public function history($peserta)
     {
         if (
-            auth()->user()->hasRole('Pasien') &&
+            auth()->user()->hasRole('Peserta') &&
             auth()->user()->peserta_id != $peserta
         ) {
             abort(403);

@@ -171,7 +171,7 @@
                                     </div>
 
                                     <div class="col-md-6 mb-3">
-                                        <label>G2JPP (mg/dL)</label>
+                                        <label>G2PP (mg/dL)</label>
                                         <input type="number" name="g2jpp" class="form-control" placeholder="140"
                                             value="{{ old('g2jpp', $pemeriksaan->g2jpp) }}">
                                     </div>

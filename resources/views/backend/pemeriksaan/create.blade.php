@@ -184,7 +184,7 @@
                                         <input type="number" name="gdp" class="form-control" placeholder="90">
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label>G2JPP (mg/dL)</label>
+                                        <label>G2PP (mg/dL)</label>
                                         <input type="number" name="g2jpp" class="form-control" placeholder="140">
                                     </div>
                                     <div class="col-md-6 mb-3">

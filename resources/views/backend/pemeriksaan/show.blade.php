@@ -185,7 +185,7 @@
                                             <td>{{ $pemeriksaan->gds }}</td>
                                         </tr>
                                         <tr>
-                                            <th>G2JPP</th>
+                                            <th>G2PP</th>
                                             <td>{{ $pemeriksaan->g2jpp }}</td>
                                         </tr>
                                         <tr>

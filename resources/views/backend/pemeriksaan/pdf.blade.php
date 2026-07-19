@@ -346,7 +346,7 @@
 
             <th>GDS</th>
             <th>GDP</th>
-            <th>G2JPP</th>
+            <th>G2PP</th>
             <th>HbA1c</th>
             <th>Kolesterol</th>
             <th>LDL</th>

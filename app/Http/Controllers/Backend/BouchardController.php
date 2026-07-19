@@ -28,7 +28,7 @@ class BouchardController extends Controller
                 ->whereHas('bouchard')
                 ->withCount('bouchard');
 
-            if (Auth::user()->hasRole('Pasien')) {
+            if (Auth::user()->hasRole('Peserta')) {
                 $query->where('id', Auth::user()->peserta_id);
             }
 
@@ -163,7 +163,7 @@ class BouchardController extends Controller
     {
         $petugas = Petugas::orderBy('nama')->get();
 
-        if (auth()->user()->hasRole('Pasien')) {
+        if (auth()->user()->hasRole('Peserta')) {
 
             $peserta = Peserta::where('id', auth()->user()->peserta_id)->get();
 
@@ -189,7 +189,7 @@ class BouchardController extends Controller
     public function store(Request $request)
     {
 
-        if (auth()->user()->hasRole('Pasien')) {
+        if (auth()->user()->hasRole('Peserta')) {
             $request->merge([
                 'peserta_id' => auth()->user()->peserta_id
             ]);
@@ -293,7 +293,7 @@ class BouchardController extends Controller
         ])->findOrFail($id);
 
         if (
-            Auth::user()->hasRole('Pasien') &&
+            Auth::user()->hasRole('Peserta') &&
             $bouchard->peserta_id != Auth::user()->peserta_id
         ) {
             abort(403);
@@ -315,7 +315,7 @@ class BouchardController extends Controller
         ])->findOrFail($id);
 
         if (
-            Auth::user()->hasRole('Pasien') &&
+            Auth::user()->hasRole('Peserta') &&
             $bouchard->peserta_id != Auth::user()->peserta_id
         ) {
             abort(403);
@@ -439,14 +439,11 @@ class BouchardController extends Controller
 
     public function destroy($id)
     {
-        $bouchard = Bouchard::findOrFail($id);
-
-        if (
-            Auth::user()->hasRole('Pasien') &&
-            $bouchard->peserta_id != Auth::user()->peserta_id
-        ) {
+        if (Auth::user()->hasRole('Peserta')) {
             abort(403);
         }
+
+        $bouchard = Bouchard::findOrFail($id);
 
         $bouchard->delete();
 
@@ -490,7 +487,7 @@ class BouchardController extends Controller
 
     public function history($peserta)
     {
-        if (Auth::user()->hasRole('Pasien')) {
+        if (Auth::user()->hasRole('Peserta')) {
             $peserta = Auth::user()->peserta_id;
         }
 

@@ -135,30 +135,39 @@
                                                             <i class="fa fa-search me-2 text-primary"></i>Detail Monitoring
                                                         </a>
                                                     </li>
-                                                    <li>
-                                                        <a class="dropdown-item"
-                                                            href="{{ route('monitoring_makanan.edit', $item->id) }}">
-                                                            <i class="fa fa-pencil-alt me-2 text-info"></i> Edit Monitoring
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a class="dropdown-item"
-                                                            href="{{ route('monitoring_makanan.export.pdf', $item->id) }}">
-                                                            <i class="fas fa-file-pdf text-danger me-2"></i>Export PDF
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a class="dropdown-item"
-                                                            href="{{ route('monitoring_makanan.export.excel', $item->id) }}">
-                                                            <i class="fas fa-file-excel text-success me-2"></i>Export Excel
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <button type="button" class="dropdown-item btn-delete"
-                                                            data-id="{{ $item->id }}">
-                                                            <i class="fa fa-trash me-2 text-danger"></i>Hapus Monitoring
-                                                        </button>
-                                                    </li>
+                                                    @if (!auth()->user()->hasRole('Peserta'))
+                                                        <li>
+                                                            <a class="dropdown-item"
+                                                                href="{{ route('monitoring_makanan.edit', $item->id) }}">
+                                                                <i class="fa fa-pencil-alt me-2 text-info"></i>
+                                                                Edit Monitoring
+                                                            </a>
+                                                        </li>
+
+                                                        <li>
+                                                            <a class="dropdown-item"
+                                                                href="{{ route('monitoring_makanan.export.pdf', $item->id) }}">
+                                                                <i class="fas fa-file-pdf text-danger me-2"></i>
+                                                                Export PDF
+                                                            </a>
+                                                        </li>
+
+                                                        <li>
+                                                            <a class="dropdown-item"
+                                                                href="{{ route('monitoring_makanan.export.excel', $item->id) }}">
+                                                                <i class="fas fa-file-excel text-success me-2"></i>
+                                                                Export Excel
+                                                            </a>
+                                                        </li>
+
+                                                        <li>
+                                                            <button type="button" class="dropdown-item btn-delete"
+                                                                data-id="{{ $item->id }}">
+                                                                <i class="fa fa-trash me-2 text-danger"></i>
+                                                                Hapus Monitoring
+                                                            </button>
+                                                        </li>
+                                                    @endif
                                                 </ul>
                                             </div>
                                         </td>
